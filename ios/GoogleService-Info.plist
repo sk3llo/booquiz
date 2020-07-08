@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>300269605649-lickki9lad276j1c4rtgecp4pblpavdr.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.300269605649-lickki9lad276j1c4rtgecp4pblpavdr</string>
+	<key>API_KEY</key>
+	<string>AIzaSyBmlAFRfFl6TH2Pdf2D-5MVSGoMcrW28WE</string>
+	<key>GCM_SENDER_ID</key>
+	<string>300269605649</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.topset.booquiz</string>
+	<key>PROJECT_ID</key>
+	<string>booquiz</string>
+	<key>STORAGE_BUCKET</key>
+	<string>booquiz.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:300269605649:ios:352d202410d623aa30f2b0</string>
+	<key>DATABASE_URL</key>
+	<string>https://booquiz.firebaseio.com</string>
+</dict>
+</plist>

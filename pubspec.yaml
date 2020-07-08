@@ -1,0 +1,66 @@
+name: booquiz
+description: A new Flutter project.
+
+# The following line prevents the package from being accidentally published to
+# pub.dev using `pub publish`. This is preferred for private packages.
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=2.7.0 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Firebase
+  cloud_firestore: ^0.13.6
+  firebase_auth: ^0.16.1
+  firebase_core: ^0.4.5
+  firebase_crashlytics: ^0.1.3+3
+
+  # Bloc
+  flutter_bloc: ^4.0.1
+  equatable: ^1.0.1
+
+  # Sign In
+  flutter_facebook_login: ^3.0.0
+  apple_sign_in: ^0.1.0
+  google_sign_in: ^4.0.7
+
+  # Image
+  cached_network_image: ^2.0.0
+
+  # Animations
+  animated_text_kit: ^2.0.0
+  simple_animations: ^1.3.6
+  sa_stateless_animation: ^1.0.1
+  flare_flutter: ^2.0.4 # Flare
+
+  # Engines
+  flame: ^0.22.0 # Flame
+
+  # ETC
+  overlay_support: ^1.0.2
+  email_validator: ^1.0.4
+  modal_bottom_sheet: ^0.2.0
+
+  # Screen Utils
+  flutter_screenutil: ^1.0.2
+  cupertino_icons: ^0.1.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/flare/
+    - assets/images/loginButtons/
+    - assets/images/background/
+    - assets/images/categories/
