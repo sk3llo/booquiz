@@ -6,7 +6,6 @@ import 'package:booquiz/models/loginCreds.dart';
 import 'package:booquiz/tools/defs.dart';
 import 'package:booquiz/tools/globals.dart';
 import 'package:booquiz/ui/custom_widgets/custom_text_field.dart';
-import 'package:booquiz/ui/login/login_step2_username.dart';
 import 'package:booquiz/ui/mainScreen/main_screen.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:flame/widgets/animation_widget.dart';
@@ -59,6 +58,7 @@ class _LoginStep1State extends State<LoginStep1> with TickerProviderStateMixin {
     super.didChangeDependencies();
 
     ScreenUtil.init(context, width: 750, height: 1334, allowFontScaling: true);
+    bigScreen = MediaQuery.of(context).size.height > 666;
   }
 
   @override
@@ -138,7 +138,7 @@ class _LoginStep1State extends State<LoginStep1> with TickerProviderStateMixin {
             padding: EdgeInsets.symmetric(horizontal: mainPadding),
             margin: EdgeInsets.symmetric(horizontal: mainPadding),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.end,
               children: <Widget>[
                 // LOGIN REQUIRED TEXT
                 Container(
@@ -357,6 +357,7 @@ class _LoginStep1State extends State<LoginStep1> with TickerProviderStateMixin {
                       'Login',
                       style: TextStyle(
                           color: emailChecked && passwordChecked ? Colors.green : Colors.white,
+                          fontSize: dimensions.sp14(),
                           fontWeight: FontWeight.bold),
                     ),
                   ),
@@ -365,7 +366,7 @@ class _LoginStep1State extends State<LoginStep1> with TickerProviderStateMixin {
                 // ERROR TEXT OR LOADING INDICATOR
                 AnimatedContainer(
                   duration: Duration(milliseconds: 300),
-                  height: dimensions.dim40(),
+                  height: dimensions.dim80(),
                   margin: EdgeInsets.symmetric(
                       vertical: dimensions.dim6()),
                   padding: EdgeInsets.symmetric(
@@ -388,7 +389,10 @@ class _LoginStep1State extends State<LoginStep1> with TickerProviderStateMixin {
                           child: Text(
                       state is LoginErrorState ? state.message : '',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: colorBlueDarkText),
+                      style: TextStyle(
+                          color: colorBlueDarkText,
+                          fontSize: dimensions.sp14()
+                      ),
                     ),
                         ),
                   ),
@@ -396,6 +400,7 @@ class _LoginStep1State extends State<LoginStep1> with TickerProviderStateMixin {
                 // ROUND BUTTONS
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: mainPadding),
+                  margin: EdgeInsets.only(bottom: dimensions.dim36()),
                   child: Column(
                     children: <Widget>[
                       // Sign in with
@@ -406,6 +411,7 @@ class _LoginStep1State extends State<LoginStep1> with TickerProviderStateMixin {
                           'or sign in with',
                           style: TextStyle(
                               color: Colors.grey[500],
+                              fontSize: dimensions.sp14(),
 //                              decoration: TextDecoration.underline,
                               decorationStyle: TextDecorationStyle.solid),
                         ),
@@ -414,7 +420,7 @@ class _LoginStep1State extends State<LoginStep1> with TickerProviderStateMixin {
                                 width: MediaQuery.of(context).size.width / 3,
                                 margin: EdgeInsets.only(bottom: mainPadding * 2, top: mainPadding / 2),
                                 height: dimensions.dim1(),
-                                color: Colors.grey[400],
+                                color: Colors.white70,
                               ),
                       // Providers (Google, FB, Apple)
                       Row(
@@ -571,13 +577,17 @@ class _LoginStep1State extends State<LoginStep1> with TickerProviderStateMixin {
               // Needed to display color change of login button
               if (t.length <= 1) setState(() {});
 
-              // Check if pass is valid (no whitespaces && more 6 chars)
+              // Check if username is valid
+              // (no whitespaces && more 6 chars)
               if (!t.contains(RegExp(r'\s')) &&
                   t.length >= usernameMinLength &&
-                  t.length <= usernameMaxLength) {
-                setState(() {
-                  usernameChecked = true;
-                });
+                  t.length <= usernameMaxLength
+                  // need at least 1 letter
+                  && t.contains(RegExp(r'[a-zA-Z]'))) {
+
+                  setState(() {
+                    usernameChecked = true;
+                  });
               } else {
                 setState(() {
                   usernameChecked = false;
@@ -624,14 +634,16 @@ class _LoginStep1State extends State<LoginStep1> with TickerProviderStateMixin {
               var t = _usernameController.text; // Username text
               // Check for whitespaces
               if (t.toLowerCase().trim() == '') {
-//                setState(() {
-//                  usernameErrorText = "Please pick a username.";
-//                });
               // Just fucking do nothing
                 return;
               } else if (t.contains(' ') || t.contains(RegExp(r'\s'))) {
                 setState(() {
                   usernameErrorText = "No whitespaces allowed.";
+                });
+                return;
+              } else if (!t.contains(RegExp(r'[a-zA-Z]'))) {
+                setState(() {
+                  usernameErrorText = "At least 1 letter required.";
                 });
                 return;
               }
@@ -652,7 +664,10 @@ class _LoginStep1State extends State<LoginStep1> with TickerProviderStateMixin {
             },
             child: Text(
               state is NewUserCreatedState ? '' : "Let's go!",
-              style: TextStyle(color: usernameChecked ? Colors.green : Colors.white),
+              style: TextStyle(
+                  color: usernameChecked ? Colors.green : Colors.white,
+                  fontSize: dimensions.sp14()
+              ),
             ),
           ),
         ),
@@ -666,7 +681,10 @@ class _LoginStep1State extends State<LoginStep1> with TickerProviderStateMixin {
             padding: EdgeInsets.symmetric(vertical: dimensions.dim4()),
             child: Text(
               usernameErrorText,
-              style: TextStyle(color: colorBlueDarkText),
+              style: TextStyle(
+                  color: colorBlueDarkText,
+                fontSize: dimensions.sp14()
+              ),
             )),
 
         successNewUser(state)

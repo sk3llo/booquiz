@@ -58,8 +58,7 @@ class BookPageErrorState extends BookPageStates {
 /// BLOC
 
 class BookPageBloc extends Bloc<BookPageEvents, BookPageStates>{
-  @override
-  BookPageStates get initialState => BookPageEmptyState();
+  BookPageBloc() : super(BookPageEmptyState());
 
   @override
   Stream<BookPageStates> mapEventToState(BookPageEvents event) async* {

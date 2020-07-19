@@ -1,4 +1,3 @@
-import 'package:booquiz/blocs/blocs.dart';
 import 'package:booquiz/models/Book.dart';
 import 'package:booquiz/tools/globals.dart';
 import 'package:flutter/material.dart';
@@ -94,8 +93,8 @@ class MainScreenBlocErrorState extends MainScreenBlocStates {
 /// BLOC
 
 class MainScreenBloc extends Bloc<MainScreenBlocEvents, MainScreenBlocStates>{
-  @override
-  MainScreenBlocStates get initialState => MainScreenBlocEmptyState();
+  MainScreenBloc() : super(MainScreenBlocEmptyState());
+
 
   @override
   Stream<MainScreenBlocStates> mapEventToState(MainScreenBlocEvents event) async* {

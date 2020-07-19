@@ -1,4 +1,4 @@
-package com.example.booquiz
+package com.topset.booquiz
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -21,7 +21,7 @@ dependencies:
   firebase_crashlytics: ^0.1.3+3
 
   # Bloc
-  flutter_bloc: ^4.0.1
+  flutter_bloc: ^5.0.1
   equatable: ^1.0.1
 
   # Sign In
@@ -54,6 +54,13 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
+  flutter_launcher_icons: ^0.7.5
+
+flutter_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icon/booquiz_launcher.png"
+
 flutter:
 
   uses-material-design: true
@@ -64,3 +71,4 @@ flutter:
     - assets/images/loginButtons/
     - assets/images/background/
     - assets/images/categories/
+    - assets/icon/

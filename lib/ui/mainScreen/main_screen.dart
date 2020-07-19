@@ -7,6 +7,7 @@ import 'package:booquiz/ui/book_page.dart';
 import 'package:booquiz/ui/custom_widgets/book_widget.dart';
 import 'package:booquiz/ui/custom_widgets/custom_text_field.dart';
 import 'package:booquiz/ui/login/login_step1.dart';
+import 'package:booquiz/ui/sliver_app_bar_delegate.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
@@ -17,6 +18,7 @@ import 'package:booquiz/blocs/blocs.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:overlay_support/overlay_support.dart';
+import 'dart:math' as math;
 
 class MainScreen extends StatefulWidget {
   @override
@@ -55,61 +57,57 @@ class _MainScreenState extends State<MainScreen> {
 //        ));
       },
       child: Scaffold(
-        backgroundColor: Colors.orange.shade100,
+        backgroundColor: Colors.orange[100],
         // Main Bloc Builder
         body: BlocBuilder(
           bloc: mainScreenBloc,
           builder: (context, state) {
-            return Stack(
-              children: <Widget>[
-                // Main Content
-                Container(
-                  margin: EdgeInsets.only(top: dimensions.dim95()),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      // Categories
-                      topCategories(state),
+            return CustomScrollView(
+              physics: BouncingScrollPhysics(),
+              slivers: <Widget>[
 
-                      // Recently updated
-                      recentlyUpdated(state),
-
-                      // Top Likes
-                      topLikes(state),
-
-                      // Top Questions
-                      topQuestions(state),
-
-                      // Top buttons
-//                  topButtons(state),
-
-//                  mainView(state),
-                    ],
-                  ),
-                ),
-
-                // Search books text field
-                Positioned(
-                  top: dimensions.dim35(),
-                  child: BackdropFilter(
-                    // Blur filter
-                    filter: ImageFilter.blur(
-                        sigmaX: searchFieldFocus.hasFocus ? 5 : 0,
-                        sigmaY: searchFieldFocus.hasFocus ? 5 : 0),
-                    child: Row(
-                      children: <Widget>[
-                        // Search field
-                        searchBooksField(state),
-                        // TEST BUTTON REMOVE AFTER
-                        Container(
-                          margin: EdgeInsets.only(left: mainPadding),
-                          child: MaterialButton(
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.all(Radius.circular(mainPadding))),
-                            onPressed: searchFieldController.text.isNotEmpty
-                                ? () {
-                              // If text hasn't changes just fuck off
-                              if (searchBookView && oldSearch == searchFieldController.text) return;
+                // APP BAR
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: SliverAppBarDelegate(
+                      minHeight: dimensions.dim100(), maxHeight: dimensions.dim100(),
+                      child: Container(
+                        decoration: ShapeDecoration(
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.only(
+                                  bottomLeft: Radius.circular(mainPadding),
+                                  bottomRight: Radius.circular(mainPadding)
+                              )
+                          ),
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.red[200],
+                              Colors.deepOrange[100],
+                              Colors.orange[100],
+                            ]
+                          )
+                        ),
+                        alignment: Alignment.bottomCenter,
+//                        padding: EdgeInsets.only(top: dimensions.dim32()),
+                        child: BackdropFilter(
+                          // Blur filter
+                          filter: ImageFilter.blur(
+                              sigmaX: searchFieldFocus.hasFocus ? 5 : 0,
+                              sigmaY: searchFieldFocus.hasFocus ? 5 : 0),
+                          child: Row(
+                            children: <Widget>[
+                              searchBooksField(),
+                              Container(
+                                margin: EdgeInsets.only(left: mainPadding),
+                                child: MaterialButton(
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.all(Radius.circular(mainPadding))),
+                                  onPressed: searchFieldController.text.isNotEmpty
+                                      ? () {
+                                    // If text hasn't changes just fuck off
+                                    if (searchBookView && oldSearch == searchFieldController.text) return;
 
                                     if (searchFieldController.text.trim().isNotEmpty) {
                                       if (!searchBookView)
@@ -131,46 +129,104 @@ class _MainScreenState extends State<MainScreen> {
                                       });
                                     }
                                     FocusScope.of(context).requestFocus(FocusNode());
-                            }
-                                : null,
-                            child: Text(
-                              searchFieldController.text.isNotEmpty
-                                  ? 'Search'
-                                  : searchBookView ? 'Done' : '',
-                              style:
-                                  TextStyle(fontSize: dimensions.sp14(), color: colorBlueDarkText),
-                            ),
+                                  }
+                                      : null,
+                                  child: Text(
+                                    searchFieldController.text.isNotEmpty
+                                        ? 'Search'
+                                        : searchBookView ? 'Done' : '',
+                                    style:
+                                    TextStyle(fontSize: dimensions.sp14(), color: colorBlueDarkText),
+                                  ),
+                                ),
+                              )
+                            ],
                           ),
-                        )
-                      ],
-                    ),
+                        ),
+                      )
                   ),
                 ),
 
-                Positioned(
-                  bottom: 0.0,
-                  child: buildRaisedContainer(state),
-                ),
+                // MAIN SHIT
+                SliverList(
+                  delegate: SliverChildListDelegate(
+                    [
+                      Container(
+                        decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.orange.shade100,
+                                  Colors.orange.shade100,
+                                ]
+                            )
+                        ),
+                        child: SingleChildScrollView(
+                            physics: BouncingScrollPhysics(),
+                            child: Stack(
+                              children: <Widget>[
+                                // Main Content
+                                Container(
+                                  margin: EdgeInsets.only(top: dimensions.dim12()),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      // Categories
+                                      topCategories(state),
 
-                // SHIELD WIDGET Prevent user from pressing anything if screen is blurred
-                Positioned(
-                  bottom: 0.0,
-                  child: searchFieldFocus.hasFocus
-                      ? GestureDetector(
-                          onTap: () {
-                            FocusScope.of(context).requestFocus(FocusNode());
-                            setState(() {});
-                          },
-                          child: Container(
-                            width: MediaQuery.of(context).size.width,
-                            height: MediaQuery.of(context).size.height - dimensions.dim95() - 56.0,
-                            color: Colors.transparent,
-                          ),
-                        )
-                      : Container(),
+                                      // Recently updated
+                                      recentlyUpdated(state),
+
+                                      // Top Likes
+                                      topLikes(state),
+
+                                      // Top Questions
+                                      topQuestions(state),
+                                    ],
+                                  ),
+                                ),
+
+                                Positioned(
+                                  bottom: 0.0,
+                                  left: dimensions.dim4(),
+                                  right: dimensions.dim4(),
+                                  child: buildRaisedContainer(state),
+                                ),
+
+                                // TRANSPARENT SHIELD WIDGET Prevent user from pressing anything if screen is blurred
+                                Positioned(
+                                  bottom: 0.0,
+                                  child: searchFieldFocus.hasFocus
+                                      ? GestureDetector(
+                                    onTap: () {
+                                      FocusScope.of(context).requestFocus(FocusNode());
+                                      setState(() {});
+                                    },
+                                    child: Container(
+                                      width: MediaQuery
+                                          .of(context)
+                                          .size
+                                          .width,
+                                      height: MediaQuery
+                                          .of(context)
+                                          .size
+                                          .height - dimensions.dim95() - 56.0,
+                                      color: Colors.transparent,
+                                    ),
+                                  )
+                                      : Container(),
+                                )
+                              ],
+                            )
+                        ),
+                      )
+                    ],
+                  ),
                 )
               ],
             );
+
           },
         ),
         bottomNavigationBar: buildBottomNavBar(),
@@ -178,13 +234,16 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
-  Widget searchBooksField(dynamic state) {
+  Widget searchBooksField() {
     return Container(
       alignment: Alignment.centerLeft,
       height: dimensions.buttonsHeight(),
       margin: EdgeInsets.only(
           left: dimensions.dim8(), bottom: dimensions.dim12(), top: dimensions.dim10()),
-      width: MediaQuery.of(context).size.width / 1.5,
+      width: MediaQuery
+          .of(context)
+          .size
+          .width / 1.5,
       padding: EdgeInsets.only(
           top: dimensions.dim4(), bottom: dimensions.dim4(), left: dimensions.dim8()),
       decoration: ShapeDecoration(
@@ -193,6 +252,8 @@ class _MainScreenState extends State<MainScreen> {
               borderRadius: BorderRadius.all(Radius.circular(dimensions.mainCornerRadius())),
               side: BorderSide(color: Colors.white))),
       child: CustomTextField(
+        expands: false,
+
         controller: searchFieldController,
         focusNode: searchFieldFocus,
         style: TextStyle(),
@@ -205,7 +266,9 @@ class _MainScreenState extends State<MainScreen> {
         ),
         onSubmitted: (t) {
           // Search field submitted
-          if (t.trim().isNotEmpty) {
+          if (t
+              .trim()
+              .isNotEmpty) {
             Timer.periodic(Duration(milliseconds: 300), (timer) {
               if (mounted)
                 setState(() {
@@ -239,7 +302,7 @@ class _MainScreenState extends State<MainScreen> {
       margin: EdgeInsets.only(left: dimensions.dim6(), right: dimensions.dim6()),
       decoration: ShapeDecoration(
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(mainPadding)))),
+          RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(mainPadding)))),
       child: Column(
         children: <Widget>[
           Container(
@@ -272,25 +335,40 @@ class _MainScreenState extends State<MainScreen> {
           ),
           SingleChildScrollView(
             child: Container(
-              width: MediaQuery.of(context).size.width,
+              width: MediaQuery
+                  .of(context)
+                  .size
+                  .width,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: <Widget>[
                   // Romance
                   Column(
                     children: <Widget>[
-                      FloatingActionButton(
-                        heroTag: 1,
-                        backgroundColor: Colors.white,
-                        elevation: 1,
-                        child: Image.asset(categoryRomanceLink,
-                            width: dimensions.dim50(), height: dimensions.dim50()),
-                        onPressed: () {},
+                      Container(
+              width: dimensions.dim55(), height: dimensions.dim55(),
+                        child: MaterialButton(
+                          child: Image.asset(categoryRomanceLink),
+                          onPressed: () {},
+                          padding: EdgeInsets.zero,
+                          color: Colors.white,
+                          elevation: 1,
+                          shape: CircleBorder(
+                            side: BorderSide(
+                              color: Colors.white,
+                              width: dimensions.dim3()
+                            )
+                          ),
+                        ),
                       ),
-                      SizedBox(height: 4),
+                      SizedBox(height: 6),
                       Text(
                         'Romance',
-                        style: TextStyle(color: loginTextColor, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            color: loginTextColor,
+                            fontWeight: FontWeight.bold,
+                          fontSize: dimensions.sp14()
+                        ),
                       )
                     ],
                   ),
@@ -298,96 +376,110 @@ class _MainScreenState extends State<MainScreen> {
                   // Sci fi
                   Column(
                     children: <Widget>[
-                      FloatingActionButton(
-                        heroTag: 2,
-                        backgroundColor: Colors.white,
-                        elevation: 1,
-                        child: Image.asset(categorySciFiLink,
-                            width: dimensions.dim50(), height: dimensions.dim50()),
-                        onPressed: () {},
+                      Container(
+                        width: dimensions.dim55(), height: dimensions.dim55(),
+                        child: MaterialButton(
+                          child: Image.asset(categorySciFiLink),
+                          onPressed: () {},
+                          padding: EdgeInsets.zero,
+                          color: Colors.white,
+                          elevation: 1,
+                          shape: CircleBorder(
+                              side: BorderSide(
+                                  color: Colors.white,
+                                  width: dimensions.dim3()
+                              )
+                          ),
+                        ),
                       ),
-                      SizedBox(height: 4),
+                      SizedBox(height: 6),
                       Text(
                         'Sci-fi',
-                        style: TextStyle(color: loginTextColor, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            color: loginTextColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: dimensions.sp14()
+                        ),
                       )
                     ],
                   ),
 
-                  // History
-//                Column(
-//                  children: <Widget>[
-//                    FloatingActionButton(
-//                      heroTag: 3,
-//                      backgroundColor: Colors.white,
-//                      elevation: 1,
-//                      child: Image.asset(categoryHistory, width: dimensions.dim50(), height: dimensions.dim50()),
-//                      onPressed: () {
-//
-//                      },
-//                    ),
-//                    SizedBox(height: 4),
-//                    Text(
-//                      'History',
-//                      style: TextStyle(
-//                          color: loginTextColor,
-//                          fontWeight: FontWeight.bold
-//                      ),
-//                    )
-//                  ],
-//                ),
-
                   // Fantasy
                   Column(
                     children: <Widget>[
-                      FloatingActionButton(
-                        heroTag: 4,
-                        backgroundColor: Colors.white,
-                        elevation: 1,
-                        child: Image.asset(categoryFantasyLink,
-                            width: dimensions.dim50(), height: dimensions.dim50()),
-                        onPressed: () {},
+                      Container(
+                        width: dimensions.dim55(), height: dimensions.dim55(),
+                        child: MaterialButton(
+                          child: Image.asset(categoryFantasyLink),
+                          onPressed: () {},
+                          padding: EdgeInsets.zero,
+                          color: Colors.white,
+                          elevation: 1,
+                          shape: CircleBorder(
+                              side: BorderSide(
+                                  color: Colors.white,
+                                  width: dimensions.dim3()
+                              )
+                          ),
+                        ),
                       ),
-                      SizedBox(height: 4),
+                      SizedBox(height: 6),
                       Text(
                         'Fantasy',
-                        style: TextStyle(color: loginTextColor, fontWeight: FontWeight.bold),
+                        style: TextStyle(color: loginTextColor, fontWeight: FontWeight.bold, fontSize: dimensions.sp14()),
                       )
                     ],
                   ),
                   // Horror
                   Column(
                     children: <Widget>[
-                      FloatingActionButton(
-                        heroTag: 5,
-                        backgroundColor: Colors.white,
-                        elevation: 1,
-                        child: Image.asset(categoryHorrorLink,
-                            width: dimensions.dim50(), height: dimensions.dim50()),
-                        onPressed: () {},
+                      Container(
+                        width: dimensions.dim55(), height: dimensions.dim55(),
+                        child: MaterialButton(
+                          child: Image.asset(categoryHorrorLink),
+                          onPressed: () {},
+                          color: Colors.white,
+                          padding: EdgeInsets.zero,
+                          elevation: 1,
+                          shape: CircleBorder(
+                            side: BorderSide(
+                              color: Colors.white,
+                              width: dimensions.dim3()
+                            )
+                          ),
+                        ),
                       ),
-                      SizedBox(height: 4),
+                      SizedBox(height: 6),
                       Text(
                         'Horror',
-                        style: TextStyle(color: loginTextColor, fontWeight: FontWeight.bold),
+                        style: TextStyle(color: loginTextColor, fontWeight: FontWeight.bold, fontSize: dimensions.sp14()),
                       )
                     ],
                   ),
+
                   // Thriller
                   Column(
                     children: <Widget>[
-                      FloatingActionButton(
-                        heroTag: '5',
-                        backgroundColor: Colors.white,
-                        elevation: 1,
-                        child: Image.asset(categoryThrillerLink,
-                            width: dimensions.dim50(), height: dimensions.dim50()),
-                        onPressed: () {},
+                      Container(
+                        width: dimensions.dim55(), height: dimensions.dim55(),
+                        child: MaterialButton(
+                          child: Image.asset(categoryThrillerLink),
+                          onPressed: () {},
+                          padding: EdgeInsets.zero,
+                          color: Colors.white,
+                          elevation: 1,
+                          shape: CircleBorder(
+                            side: BorderSide(
+                              color: Colors.white,
+                              width: dimensions.dim3()
+                            )
+                          ),
+                        ),
                       ),
-                      SizedBox(height: 4),
+                      SizedBox(height: 6),
                       Text(
                         'Thriller',
-                        style: TextStyle(color: loginTextColor, fontWeight: FontWeight.bold),
+                        style: TextStyle(color: loginTextColor, fontWeight: FontWeight.bold, fontSize: dimensions.sp14()),
                       )
                     ],
                   ),
@@ -402,17 +494,16 @@ class _MainScreenState extends State<MainScreen> {
 
   Widget recentlyUpdated(dynamic state) {
     return Container(
-      padding: EdgeInsets.all(dimensions.dim6()),
-      margin: EdgeInsets.only(left: dimensions.dim6(), right: dimensions.dim6(), top: mainPadding),
+      margin: EdgeInsets.only(top: dimensions.dim18()),
       decoration: ShapeDecoration(
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(mainPadding)))),
+          RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(mainPadding)))),
       child: Column(
         children: <Widget>[
           Container(
             alignment: Alignment.centerLeft,
             margin: EdgeInsets.only(
-                left: dimensions.dim6(), top: dimensions.dim8(), bottom: dimensions.dim16()),
+                left: dimensions.dim14(), top: dimensions.dim8(), bottom: dimensions.dim16()),
             child: Text(
               'Recently Updated',
               style: TextStyle(
@@ -422,13 +513,41 @@ class _MainScreenState extends State<MainScreen> {
               ),
             ),
           ),
-          SingleChildScrollView(
-            child: Container(
-              width: MediaQuery.of(context).size.width,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: <Widget>[],
+          Container(
+            width: MediaQuery
+                .of(context)
+                .size
+                .width,
+            height: dimensions.dim100(),
+            decoration: ShapeDecoration(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(mainPadding))
               ),
+            ),
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              physics: BouncingScrollPhysics(),
+              children: List.generate(5, (i) =>
+                  Container(
+                    height: dimensions.dim100(),
+                    width: dimensions.dim80(),
+                    margin: EdgeInsets.only(left: mainPadding, right: i == 4 ? mainPadding : 0),
+                    padding: EdgeInsets.only(left: mainPadding, right: mainPadding),
+                    alignment: Alignment.center,
+                    decoration: ShapeDecoration(
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(mainPadding))
+                      ),
+                      color: Colors.grey,
+                    ),
+                    child: Text(
+                      'Book ' + (i + 1).toString(),
+                      style: TextStyle(
+                          fontSize: dimensions.sp14(),
+                          color: Colors.orange.shade100
+                      ),
+                    ),
+                  )),
             ),
           ),
         ],
@@ -438,17 +557,16 @@ class _MainScreenState extends State<MainScreen> {
 
   Widget topLikes(dynamic state) {
     return Container(
-      padding: EdgeInsets.all(dimensions.dim6()),
-      margin: EdgeInsets.only(left: dimensions.dim6(), right: dimensions.dim6()),
+      padding: EdgeInsets.only(top: dimensions.dim6()),
       decoration: ShapeDecoration(
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(mainPadding)))),
+          RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(mainPadding)))),
       child: Column(
         children: <Widget>[
           Container(
             alignment: Alignment.centerLeft,
             margin: EdgeInsets.only(
-                left: dimensions.dim6(), top: dimensions.dim8(), bottom: dimensions.dim16()),
+                left: dimensions.dim14(), top: dimensions.dim8(), bottom: dimensions.dim16()),
             child: Text(
               'Top Likes',
               style: TextStyle(
@@ -458,15 +576,43 @@ class _MainScreenState extends State<MainScreen> {
               ),
             ),
           ),
-          SingleChildScrollView(
-            child: Container(
-              width: MediaQuery.of(context).size.width,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: <Widget>[],
+          Container(
+            width: MediaQuery
+                .of(context)
+                .size
+                .width,
+            height: dimensions.dim100(),
+            decoration: ShapeDecoration(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(mainPadding))
               ),
             ),
-          ),
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              physics: BouncingScrollPhysics(),
+              children: List.generate(5, (i) =>
+                  Container(
+                    height: dimensions.dim100(),
+                    width: dimensions.dim80(),
+                    margin: EdgeInsets.only(left: mainPadding, right: i == 4 ? mainPadding : 0),
+                    padding: EdgeInsets.only(left: mainPadding, right: mainPadding),
+                    alignment: Alignment.center,
+                    decoration: ShapeDecoration(
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(mainPadding))
+                      ),
+                      color: Colors.blue[300],
+                    ),
+                    child: Text(
+                      'Book ' + (i + 1).toString(),
+                      style: TextStyle(
+                          fontSize: dimensions.sp14(),
+                          color: Colors.white
+                      ),
+                    ),
+                  )),
+            ),
+          )
         ],
       ),
     );
@@ -474,17 +620,16 @@ class _MainScreenState extends State<MainScreen> {
 
   Widget topQuestions(dynamic state) {
     return Container(
-      padding: EdgeInsets.all(dimensions.dim6()),
-      margin: EdgeInsets.only(left: dimensions.dim6(), right: dimensions.dim6()),
+      padding: EdgeInsets.only(top: dimensions.dim6(), bottom: dimensions.dim16()),
       decoration: ShapeDecoration(
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(mainPadding)))),
+          RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(mainPadding)))),
       child: Column(
         children: <Widget>[
           Container(
             alignment: Alignment.centerLeft,
             margin: EdgeInsets.only(
-                left: dimensions.dim6(), top: dimensions.dim8(), bottom: dimensions.dim16()),
+                left: dimensions.dim14(), top: dimensions.dim8(), bottom: dimensions.dim16()),
             child: Text(
               'Top Questions',
               style: TextStyle(
@@ -494,15 +639,43 @@ class _MainScreenState extends State<MainScreen> {
               ),
             ),
           ),
-          SingleChildScrollView(
-            child: Container(
-              width: MediaQuery.of(context).size.width,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: <Widget>[],
+          Container(
+            width: MediaQuery
+                .of(context)
+                .size
+                .width,
+            height: dimensions.dim100(),
+            decoration: ShapeDecoration(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(mainPadding))
               ),
             ),
-          ),
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              physics: BouncingScrollPhysics(),
+              children: List.generate(5, (i) =>
+                  Container(
+                    height: dimensions.dim100(),
+                    width: dimensions.dim80(),
+                    margin: EdgeInsets.only(left: mainPadding, right: i == 4 ? mainPadding : 0),
+                    padding: EdgeInsets.only(left: mainPadding, right: mainPadding),
+                    alignment: Alignment.center,
+                    decoration: ShapeDecoration(
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(mainPadding))
+                      ),
+                      color: Colors.green,
+                    ),
+                    child: Text(
+                      'Book ' + (i + 1).toString(),
+                      style: TextStyle(
+                          fontSize: dimensions.sp14(),
+                          color: Colors.white
+                      ),
+                    ),
+                  )),
+            ),
+          )
         ],
       ),
     );
@@ -512,7 +685,10 @@ class _MainScreenState extends State<MainScreen> {
     return SingleChildScrollView(
       child: Container(
         height: dimensions.dim54(),
-        width: MediaQuery.of(context).size.width,
+        width: MediaQuery
+            .of(context)
+            .size
+            .width,
         child: Row(
 //          scrollDirection: Axis.horizontal,
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -615,37 +791,34 @@ class _MainScreenState extends State<MainScreen> {
     return AnimatedContainer(
       duration: Duration(milliseconds: 300),
       decoration: ShapeDecoration(
-//        image: DecorationImage(
-//          image: AssetImage(
-//              searchBooksBackgroundImageLink,
-//          ),
-//          colorFilter: ColorFilter.mode(Colors.white.withOpacity(.1), BlendMode.overlay),
-//          fit: BoxFit.fill,
-//        ),
           gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-//                Colors.grey[50],
                 Colors.orange.shade100,
                 Colors.orange.shade50,
-//                Colors.orange.shade50,
-//                Colors.orange.shade50,
               ]),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(mainPadding * 2),
                 topRight: Radius.circular(mainPadding * 2)),
           )),
-      alignment: Alignment.bottomCenter,
-      height: searchBookView ? MediaQuery.of(context).size.height - dimensions.dim95() - 56.0 : 0,
-      width: MediaQuery.of(context).size.width,
+//      alignment: Alignment.bottomCenter,
+      height: searchBookView ? MediaQuery
+          .of(context)
+          .size
+          .height - (bigScreen ? dimensions.dim45() : dimensions.dim40()) : 0,
+      width: MediaQuery
+          .of(context)
+          .size
+          .width,
+      padding: EdgeInsets.only(bottom: dimensions.dim90()),
       child: Stack(
         alignment: Alignment.topCenter,
         fit: StackFit.expand,
         children: <Widget>[
-          Padding(
-            padding: EdgeInsets.only(top: dimensions.dim42()),
+          Container(
+            padding: EdgeInsets.only(top: dimensions.dim38()),
             child: ListView.builder(
                 shrinkWrap: true,
                 controller: searchBooksScrollController,
@@ -653,9 +826,10 @@ class _MainScreenState extends State<MainScreen> {
                 itemCount: state is MainScreenBlocLoadedState
                     ? searchBooksList.isNotEmpty ? searchBooksList.length : 1
                     : state is MainScreenBlocLoadingState && searchBooksList.isNotEmpty
-                        ? searchBooksList.length + 1
-                        : 1,
-                padding: EdgeInsets.only(right: mainPadding, left: dimensions.dim8(), top: dimensions.dim10()),
+                    ? searchBooksList.length + 1
+                    : 1,
+                padding: EdgeInsets.only(
+                    right: mainPadding, left: dimensions.dim8(), top: dimensions.dim10(), bottom: dimensions.dim32()),
                 itemBuilder: (context, pos) {
                   if (pos == searchBooksList.length) {
                     return Container(
@@ -670,22 +844,14 @@ class _MainScreenState extends State<MainScreen> {
                   if (state is MainScreenBlocLoadingState) {
                     if (searchBooksList.isNotEmpty)
                       return BookWidget(
-                          searchBooksList[pos],
+                        searchBooksList[pos],
                         onBookTapped: (_book) {
-                            print(_book.title);
+                          print(_book.title);
                         },
                       );
                   }
 
                   if (state is MainScreenBlocLoadedState) {
-
-//                    if (pos == searchBooksList.length){
-//                      return Container(
-//                          alignment: Alignment.center,
-//                          width: dimensions.dim36(),
-//                          height: dimensions.dim36(),
-//                          child: CircularProgressIndicator());
-//                    }
 
                     // Load more
                     if (pos == searchBooksList.length - 2 && !state.noMoreItems) {
@@ -699,18 +865,18 @@ class _MainScreenState extends State<MainScreen> {
                         child: Text(
                           'No result...',
                           style: TextStyle(
-                            fontSize: dimensions.dim16()
+                              fontSize: dimensions.dim16()
                           ),
                         ),
                       );
                     }
 
                     return BookWidget(
-                        searchBooksList[pos],
+                      searchBooksList[pos],
                       onBookTapped: (_book) {
-                          Navigator.of(context).push(MaterialPageRoute(
+                        Navigator.of(context).push(MaterialPageRoute(
                             builder: (context) => BookPage(searchBooksList[pos])
-                          ));
+                        ));
                       },
                     );
                   }
@@ -730,59 +896,44 @@ class _MainScreenState extends State<MainScreen> {
                 },
                 child: searchBookView
                     ? AnimatedContainer(
-                        decoration: ShapeDecoration(
-                            gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  Colors.deepOrange.shade100.withOpacity(.5),
-                                  Colors.yellow.shade100.withOpacity(.1),
-//                        Colors.yellow.shade100,
-                                ]),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.only(
-                                    topLeft: Radius.circular(mainPadding * 2),
-                                    topRight: Radius.circular(mainPadding * 2)))),
-                        duration: Duration(milliseconds: 200),
+                  decoration: ShapeDecoration(
+                      gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.deepOrange.shade200.withOpacity(.4),
+                            Colors.red.shade100.withOpacity(.1),
+                          ]),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(mainPadding * 2),
+                              topRight: Radius.circular(mainPadding * 2),
+                              bottomLeft: Radius.circular(mainPadding * 2),
+                              bottomRight: Radius.circular(mainPadding * 2),
+                          ))),
+                  duration: Duration(milliseconds: 200),
 //                  margin: EdgeInsets.only(),
-                        padding: EdgeInsets.only(
-                            right: dimensions.dim22(),
-                            top: dimensions.dim6(),
-                            bottom: dimensions.dim6()),
-                        alignment: Alignment.centerRight,
-                        width: MediaQuery.of(context).size.width,
-                        height: dimensions.dim50(),
-                        child: Icon(
-                          Icons.close,
-                          color: Colors.grey,
-                          size: dimensions.dim32(),
-                        ),
-                      )
+                  padding: EdgeInsets.only(
+                      right: dimensions.dim22(),
+                      top: dimensions.dim6(),
+                      bottom: dimensions.dim6()
+                  ),
+                  alignment: Alignment.centerRight,
+                  width: MediaQuery
+                      .of(context)
+                      .size
+                      .width,
+                  height: dimensions.dim50(),
+                  child: Icon(
+                    Icons.close,
+                    color: Colors.grey[500],
+                    size: dimensions.dim32(),
+                  ),
+                )
                     : Container()),
           ),
         ],
       ),
     );
-
-//    return AnimatedContainer(
-//      duration: Duration(milliseconds: 300),
-//      decoration: ShapeDecoration(
-//          color: Colors.white,
-//          shape: RoundedRectangleBorder(
-//              borderRadius: BorderRadius.only(
-//                  topLeft: Radius.circular(mainPadding * 2),
-//                  topRight: Radius.circular(mainPadding * 2)))),
-//      alignment: Alignment.bottomCenter,
-//      height: bookSearchView ? MediaQuery.of(context).size.height - dimensions.dim95() - 56.0 : 0,
-//      width: MediaQuery.of(context).size.width,
-//      child: Center(
-//          child: GestureDetector(
-//              onTap: () {
-//                setState(() {
-//                  bookSearchView = false;
-//                });
-//              },
-//              child: Text("AZAZA"))),
-//    );
   }
 }

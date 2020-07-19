@@ -183,9 +183,9 @@ class NewUserCreatedState extends LoginStates {
 /// BLOC
 
 class LoginBloc extends Bloc<LoginEvents, LoginStates> {
-  @override
-  LoginStates get initialState => LoginEmptyState();
+  LoginBloc() : super(LoginEmptyState());
 
+//  LoginEmptyState
   @override
   Stream<LoginStates> mapEventToState(LoginEvents event) async* {
 
@@ -506,8 +506,6 @@ class LoginBloc extends Bloc<LoginEvents, LoginStates> {
                 creds.email = x['email'];
               }
 
-              print(firebaseUser.email);
-
               // Save creds to DB
               await dbHelper.saveLoginCreds(firebaseUser.email, creds.authCode, appleProvider, idToken: creds.idToken);
 
@@ -543,7 +541,6 @@ class LoginBloc extends Bloc<LoginEvents, LoginStates> {
               yield LoginErrorState('"Sign in failed');
               break;
             case AuthorizationStatus.cancelled:
-              print(3);
               print('User cancelled');
               yield LoginEmptyState();
               break;
@@ -627,7 +624,7 @@ class LoginBloc extends Bloc<LoginEvents, LoginStates> {
         // Sign in with google
         String _errorMessage = '';
         var _signIn = await auth
-            .createUserWithEmailAndPassword(email: event.email, password: event.password)
+            .createUserWithEmailAndPassword(email: event.email.trim(), password: event.password.trim())
             .catchError((e) {
           _errorMessage = e.message;
         });

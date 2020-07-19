@@ -7,8 +7,88 @@ class Dimensions {
 
   // ALL DIM FOR WIDGETS (EXCEPT TEXT)
 
+  double dim400 (){
+    return mSize.setHeight(800);
+  }
+
+  double dim350 (){
+    return mSize.setHeight(700);
+  }
+
+  double dim345 (){
+    return mSize.setHeight(690);
+  }
+
+  double dim344 (){
+    return mSize.setHeight(688);
+  }
+
+  double dim343 (){
+    return mSize.setHeight(686);
+  }
+
+  double dim342 (){
+    return mSize.setHeight(684);
+  }
+
+  double dim341 (){
+    return mSize.setHeight(682);
+  }
+
+  double dim340 (){
+    return mSize.setHeight(680);
+  }
+
+  double dim339 (){
+    return mSize.setHeight(678);
+  }
+
+  double dim338 (){
+    return mSize.setHeight(676);
+  }
+
+  double dim337 (){
+    return mSize.setHeight(674);
+  }
+
+  double dim336 (){
+    return mSize.setHeight(672);
+  }
+
+  double dim335 (){
+    return mSize.setHeight(670);
+  }
+
   double dim300 (){
     return mSize.setHeight(600);
+  }
+
+  double dim275 (){
+    return mSize.setHeight(550);
+  }
+
+  double dim265 (){
+    return mSize.setHeight(530);
+  }
+
+  double dim255 (){
+    return mSize.setHeight(510);
+  }
+
+  double dim254 (){
+    return mSize.setHeight(508);
+  }
+
+  double dim253 (){
+    return mSize.setHeight(506);
+  }
+
+  double dim252 (){
+    return mSize.setHeight(504);
+  }
+
+  double dim251 (){
+    return mSize.setHeight(502);
   }
 
   double dim250 (){
@@ -35,12 +115,72 @@ class Dimensions {
     return mSize.setHeight(440);
   }
 
+  double dim210 (){
+    return mSize.setHeight(420);
+  }
+  
+  double dim209 (){
+    return mSize.setHeight(418);
+  }
+
+  double dim208 (){
+    return mSize.setHeight(416);
+  }
+
+  double dim207 (){
+    return mSize.setHeight(414);
+  }
+
+  double dim206 (){
+    return mSize.setHeight(412);
+  }
+
+  double dim205 (){
+    return mSize.setHeight(410);
+  }
+
+  double dim204 (){
+    return mSize.setHeight(408);
+  }
+
+  double dim203 (){
+    return mSize.setHeight(406);
+  }
+
+  double dim202 (){
+    return mSize.setHeight(404);
+  }
+
+  double dim201 (){
+    return mSize.setHeight(402);
+  }
+
   double dim200 (){
     return mSize.setHeight(400);
   }
 
   double dim190 (){
     return mSize.setHeight(380);
+  }
+
+  double dim185 (){
+    return mSize.setHeight(370);
+  }
+
+  double dim184 (){
+    return mSize.setHeight(368);
+  }
+
+  double dim183 (){
+    return mSize.setHeight(366);
+  }
+
+  double dim182 (){
+    return mSize.setHeight(364);
+  }
+
+  double dim181 (){
+    return mSize.setHeight(362);
   }
 
   double dim180 (){
@@ -57,6 +197,25 @@ class Dimensions {
 
   double dim150 (){
     return mSize.setHeight(300);
+  }
+
+  double dim145 (){
+    return mSize.setHeight(290);
+  }
+  double dim144 (){
+    return mSize.setHeight(288);
+  }
+
+  double dim143 (){
+    return mSize.setHeight(286);
+  }
+
+  double dim142 (){
+    return mSize.setHeight(284);
+  }
+
+  double dim141 (){
+    return mSize.setHeight(282);
   }
 
   double dim140 (){

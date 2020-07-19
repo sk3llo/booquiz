@@ -15,7 +15,7 @@ import 'package:overlay_support/overlay_support.dart';
 
 LoginBloc loginBloc = LoginBloc();
 MainScreenBloc mainScreenBloc = MainScreenBloc();
-MainScreenBloc bookPageBloc = MainScreenBloc();
+BookPageBloc bookPageBloc = BookPageBloc();
 
 
 // DIMENSIONS / SIZE
@@ -35,6 +35,8 @@ Firestore firestore = Firestore.instance;
 CollectionReference usersRef = firestore.collection('USERS');
 FirebaseAuth auth = FirebaseAuth.instance;
 FirestoreUtils fUtils = FirestoreUtils();
+
+bool bigScreen;
 
 final DatabaseHelper dbHelper = DatabaseHelper.instance;
 
