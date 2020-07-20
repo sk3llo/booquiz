@@ -16,7 +16,7 @@ class FirestoreUtils {
 
     bookDebug('firestore_utils.dart', 'createUser', 'INFO', 'Trying to create user: ${firebaseUser.email}');
 
-    List<String> _usernameSearch = await _generateDisplayNameAndUsername(username.toLowerCase());
+    List<String> _usernameSearch = await generateDisplayNameAndUsername(username.toLowerCase());
 
     try {
       UserModel _user = UserModel.newUser(firebaseUser, loginMethod, username, password, _usernameSearch);
@@ -311,7 +311,7 @@ class FirestoreUtils {
 
   /// NEEDED TO GENERATE 'searchName'
 
-  Future<List<String>> _generateDisplayNameAndUsername(String initialName) async {
+  Future<List<String>> generateDisplayNameAndUsername(String initialName) async {
     List<String> mainList = [];
     List<String> _words = [];
     // First check how many words we got

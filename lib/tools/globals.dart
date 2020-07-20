@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:booquiz/blocs/add_question_bloc.dart';
 import 'package:booquiz/blocs/blocs.dart';
 import 'package:booquiz/blocs/login_bloc.dart';
 import 'package:booquiz/models/userModel.dart';
@@ -16,7 +17,7 @@ import 'package:overlay_support/overlay_support.dart';
 LoginBloc loginBloc = LoginBloc();
 MainScreenBloc mainScreenBloc = MainScreenBloc();
 BookPageBloc bookPageBloc = BookPageBloc();
-
+AddQuestionBloc addQuestionBloc = AddQuestionBloc();
 
 // DIMENSIONS / SIZE
 final ScreenUtil mSize = ScreenUtil();

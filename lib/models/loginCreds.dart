@@ -1,6 +1,3 @@
-import 'dart:math';
-import 'dart:typed_data';
-
 import 'package:apple_sign_in/apple_id_credential.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 

@@ -1,4 +1,5 @@
 import 'package:booquiz/models/Book.dart';
+import 'package:booquiz/models/Question.dart';
 import 'package:booquiz/ui/add_question_page.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -25,6 +26,8 @@ class _BookPageState extends State<BookPage> with TickerProviderStateMixin {
   int currentTabPos = 0;
   TabController tabController; // Description, Quiz
 
+  List<Question> questions = [];
+
   @override
   void initState() {
     super.initState();
@@ -39,13 +42,6 @@ class _BookPageState extends State<BookPage> with TickerProviderStateMixin {
       color: Colors.transparent,
       child: Container(
         decoration: BoxDecoration(
-//          image: DecorationImage(
-//            colorFilter: ColorFilter.mode(Colors.black87.withOpacity(.5), BlendMode.srcOver),
-//            image: CachedNetworkImageProvider(
-//              widget.book.imageUrl, // Background image
-//            ),
-//            fit: BoxFit.cover,
-//          )
             gradient:
                 LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [
           Colors.deepOrangeAccent.shade100,
@@ -70,7 +66,7 @@ class _BookPageState extends State<BookPage> with TickerProviderStateMixin {
                   ),
                 ),
               ),
-              title: Text('666 Questions'),
+              title: Text('${questions.length} Questions'),
               centerTitle: true,
               actions: <Widget>[
                 Tooltip(
@@ -79,7 +75,13 @@ class _BookPageState extends State<BookPage> with TickerProviderStateMixin {
                     padding: EdgeInsets.only(right: dimensions.dim6()),
                     child: IconButton(
                       onPressed: () {
-                        Navigator.of(context).push(MaterialPageRoute(builder: (context) => AddQuestionPage()));
+                        print(widget.book.id);
+                        Navigator.of(context).push(MaterialPageRoute(builder: (context) => AddQuestionPage(widget.book))).then((question) {
+                          if (question != null){
+                            questions.add(question);
+                            setState(() {});
+                          }
+                        });
                       },
                       icon: Icon(Icons.add),
                     ),

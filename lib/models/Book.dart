@@ -1,3 +1,4 @@
+import 'package:booquiz/models/Question.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
@@ -17,7 +18,8 @@ class Book {
   List authors, categories;
   bool starred;
   int likes = 0;
-  Map<String, List<String>> quiz; // Questions and answers
+  int questionsLength = 0;
+  List<Question> quiz; // Questions and answers
   Timestamp updatedAt;
 
   Book({
@@ -32,7 +34,8 @@ class Book {
     this.notes = "",
     this.likes,
     this.quiz,
-    this.updatedAt
+    this.updatedAt,
+    this.questionsLength
   });
 
   Book.fromMap(Map<String, dynamic> map) : this(
