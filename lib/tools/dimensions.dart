@@ -222,6 +222,26 @@ class Dimensions {
     return mSize.setHeight(280);
   }
 
+  double dim135 (){
+    return mSize.setHeight(270);
+  }
+
+  double dim134 (){
+    return mSize.setHeight(268);
+  }
+
+  double dim133 (){
+    return mSize.setHeight(266);
+  }
+
+  double dim132 (){
+    return mSize.setHeight(264);
+  }
+
+  double dim131 (){
+    return mSize.setHeight(262);
+  }
+
   double dim130 (){
     return mSize.setHeight(260);
   }

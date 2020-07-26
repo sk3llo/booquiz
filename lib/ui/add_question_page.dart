@@ -104,14 +104,16 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
 
                       }
                     },
-                    icon: state is AddQuestionLoadingState ? CircularProgressIndicator(backgroundColor: Colors.white70) : Icon(Icons.done),
+                    icon: state is AddQuestionLoadingState ? CircularProgressIndicator(backgroundColor: Colors.orangeAccent.shade400.withOpacity(.5),
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white)) :
+                    Icon(Icons.done, color: Colors.white, size: dimensions.dim28(),),
                   ),
                 ),
               )
             ],
             title: Text(
               'Add a question',
-              style: TextStyle(color: Colors.black38),
+              style: TextStyle(color: Colors.black54),
             ),
             centerTitle: true,
           ),
@@ -182,7 +184,7 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                             margin: EdgeInsets.symmetric(horizontal: mainPadding),
                             padding: EdgeInsets.symmetric(horizontal: mainPadding),
                             decoration: ShapeDecoration(
-                                color: Colors.white,
+                                color: Colors.white30,
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.all(Radius.circular(dimensions.dim12())),
                                     side: BorderSide(
@@ -205,9 +207,9 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                                     : '${15 - _questionController.text.length} more characters required'
                                     : '',
                                 hintText: 'What is the name of the main character?',
-                                errorStyle: TextStyle(color: Colors.deepOrange[200]),
+                                errorStyle: TextStyle(color: Colors.orangeAccent[300]),
                                 hintStyle:
-                                TextStyle(fontSize: dimensions.sp16(), color: Colors.grey[400]),
+                                TextStyle(fontSize: dimensions.sp16(), color: Colors.grey),
                                 enabledBorder: InputBorder.none,
                                 disabledBorder: InputBorder.none,
                                 border: InputBorder.none,
@@ -268,7 +270,7 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                       margin: EdgeInsets.only(right: mainPadding, left: mainPadding),
                       padding: EdgeInsets.only(right: mainPadding, left: mainPadding),
                       decoration: ShapeDecoration(
-                          color: Colors.white,
+                          color: Colors.white30,
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.all(Radius.circular(24)),
                               side: BorderSide(
@@ -293,7 +295,7 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                               decoration: InputDecoration(
                                 hintText: 'Yes',
                                 hintStyle:
-                                TextStyle(fontSize: dimensions.sp16(), color: Colors.grey[400]),
+                                TextStyle(fontSize: dimensions.sp16(), color: Colors.grey),
                                 enabledBorder: InputBorder.none,
                                 disabledBorder: InputBorder.none,
                                 border: InputBorder.none,
@@ -316,11 +318,11 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                                 },
                                 child: Container(
                                   decoration: ShapeDecoration(
-                                      color: correctAnswer == 1 ? Colors.orange[200] : Colors.grey[100],
+                                      color: correctAnswer == 1 ? Colors.orange : Colors.white,
                                       shape: CircleBorder()),
                                   child: Icon(
                                     Icons.done,
-                                    color: correctAnswer == 1 ? Colors.white : Colors.grey[300],
+                                    color: correctAnswer == 1 ? Colors.white : Colors.grey[400],
                                   ),
                                 ),
                               ),
@@ -378,7 +380,7 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                       margin: EdgeInsets.symmetric(horizontal: mainPadding),
                       padding: EdgeInsets.symmetric(horizontal: mainPadding),
                       decoration: ShapeDecoration(
-                          color: Colors.white,
+                          color: Colors.white30,
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.all(Radius.circular(24)),
                               side: BorderSide(
@@ -401,7 +403,7 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                             decoration: InputDecoration(
                               hintText: 'No',
                               hintStyle:
-                              TextStyle(fontSize: dimensions.sp16(), color: Colors.grey[400]),
+                              TextStyle(fontSize: dimensions.sp16(), color: Colors.grey),
                               enabledBorder: InputBorder.none,
                               disabledBorder: InputBorder.none,
                               border: InputBorder.none,
@@ -423,11 +425,11 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                                 },
                                 child: Container(
                                   decoration: ShapeDecoration(
-                                      color: correctAnswer == 2 ? Colors.orange[200] : Colors.grey[100],
+                                      color: correctAnswer == 2 ? Colors.orange : Colors.white,
                                       shape: CircleBorder()),
                                   child: Icon(
                                     Icons.done,
-                                    color: correctAnswer == 2 ? Colors.white : Colors.grey[300],
+                                    color: correctAnswer == 2 ? Colors.white : Colors.grey[400],
                                   ),
                                 ),
                               ),
@@ -533,7 +535,7 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                                   margin: EdgeInsets.symmetric(horizontal: mainPadding),
                                   padding: EdgeInsets.symmetric(horizontal: mainPadding, vertical: 4),
                                   decoration: ShapeDecoration(
-                                      color: Colors.white,
+                                      color: Colors.white30,
                                       shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.all(Radius.circular(24)),
                                           side: BorderSide(
@@ -578,15 +580,11 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                                             },
                                             child: Container(
                                               decoration: ShapeDecoration(
-                                                  color: correctAnswer == 3
-                                                      ? Colors.orange[200]
-                                                      : Colors.grey[100],
+                                                  color: correctAnswer == 3 ? Colors.orange : Colors.white,
                                                   shape: CircleBorder()),
                                               child: Icon(
                                                 Icons.done,
-                                                color: correctAnswer == 3
-                                                    ? Colors.white
-                                                    : Colors.grey[300],
+                                                color: correctAnswer == 3 ? Colors.white : Colors.grey[400],
                                               ),
                                             ),
                                           ),
@@ -717,7 +715,7 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                                   margin: EdgeInsets.symmetric(horizontal: mainPadding),
                                   padding: EdgeInsets.symmetric(horizontal: mainPadding, vertical: 4),
                                   decoration: ShapeDecoration(
-                                      color: Colors.white,
+                                      color: Colors.white30,
                                       shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.all(Radius.circular(24)),
                                           side: BorderSide(
@@ -762,15 +760,11 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                                             },
                                             child: Container(
                                               decoration: ShapeDecoration(
-                                                  color: correctAnswer == 4
-                                                      ? Colors.orange[200]
-                                                      : Colors.grey[100],
+                                                  color: correctAnswer == 4 ? Colors.orange : Colors.white,
                                                   shape: CircleBorder()),
                                               child: Icon(
                                                 Icons.done,
-                                                color: correctAnswer == 4
-                                                    ? Colors.white
-                                                    : Colors.grey[300],
+                                                color: correctAnswer == 4 ? Colors.white : Colors.grey[400],
                                               ),
                                             ),
                                           ),
@@ -931,7 +925,6 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
       }
     }
 
-    // Passed shit
     return true;
   }
 

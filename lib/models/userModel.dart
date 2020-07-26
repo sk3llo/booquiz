@@ -5,6 +5,7 @@ class UserModel {
   final String username;
   final Timestamp lastLogin;
   final String email;
+  String aboutMe;
   final String password; // Used only if user logged in with Email/Password
   final List<String> loginMethod; // GOOGLE, APPLE, FB, EMAIL
   final List<String> questions; // Have to get manually
@@ -13,7 +14,7 @@ class UserModel {
   final DocumentSnapshot snap;
 //  List<String> reportedBy; // List of users who reported this one
 
-  UserModel({this.username, this.usernameSearch, this.lastLogin, this.email, this.password, this.loginMethod, this.questions, this.questionsCount,
+  UserModel({this.username, this.usernameSearch, this.aboutMe, this.lastLogin, this.email, this.password, this.loginMethod, this.questions, this.questionsCount,
       this.snap,
 //    this.reportedBy
   });
@@ -22,6 +23,7 @@ class UserModel {
     return UserModel(
       username: _snap.data['username'],
       email: _snap.data['email'],
+      aboutMe: _snap.data['aboutMe'],
       loginMethod: List<String>.from(_snap.data['loginMethod']),
       snap: _snap,
       lastLogin: _snap.data['lastLogin'],
@@ -37,6 +39,7 @@ class UserModel {
     return UserModel(
       username: username,
       email: _user.email,
+      aboutMe: '',
       loginMethod: [loginMethod],
       password: password ?? '',
       lastLogin: Timestamp.now(),

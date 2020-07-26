@@ -13,34 +13,34 @@ import 'package:meta/meta.dart';
 /// EVENTS
 
 @immutable
-abstract class MainScreenBlocEvents extends Equatable {
-  MainScreenBlocEvents([List props = const []]) : super();
+abstract class HomePageBlocEvents extends Equatable {
+  HomePageBlocEvents([List props = const []]) : super();
 }
 
-class MainScreenSearchByGenreEvent extends MainScreenBlocEvents {
+class HomePageSearchByGenreEvent extends HomePageBlocEvents {
   final String genreName;
-  MainScreenSearchByGenreEvent(this.genreName);
+  HomePageSearchByGenreEvent(this.genreName);
 
   @override
   List<Object> get props => [genreName];
 
 }
 
-class MainScreenSearchByInputEvent extends MainScreenBlocEvents {
+class HomePageSearchByInputEvent extends HomePageBlocEvents {
   final String input;
   final int maxResults;
   final List<Book> mainList;
 
-  MainScreenSearchByInputEvent(this.input, {this.maxResults = 15, this.mainList = const []});
+  HomePageSearchByInputEvent(this.input, {this.maxResults = 15, this.mainList = const []});
 
   @override
   List<Object> get props => [input, maxResults];
 
 }
 
-class MainScreenGetRecentlyUpdatedBooksEvent extends MainScreenBlocEvents {
+class HomePageGetRecentlyUpdatedBooksEvent extends HomePageBlocEvents {
   final int limit;
-  MainScreenGetRecentlyUpdatedBooksEvent({this.limit = 10});
+  HomePageGetRecentlyUpdatedBooksEvent({this.limit = 10});
 
   @override
   List<Object> get props => [limit];
@@ -51,39 +51,39 @@ class MainScreenGetRecentlyUpdatedBooksEvent extends MainScreenBlocEvents {
 /// STATES
 
 @immutable
-abstract class MainScreenBlocStates extends Equatable {
-  MainScreenBlocStates([List props = const []]) : super();
+abstract class HomePageBlocStates extends Equatable {
+  HomePageBlocStates([List props = const []]) : super();
 }
 
-class MainScreenBlocEmptyState extends MainScreenBlocStates {
+class HomePageBlocEmptyState extends HomePageBlocStates {
 
   @override
   List<Object> get props => [];
 
 }
 
-class MainScreenBlocLoadingState extends MainScreenBlocStates {
+class HomePageBlocLoadingState extends HomePageBlocStates {
   final bool bottomIndicator;
-  MainScreenBlocLoadingState({this.bottomIndicator = false});
+  HomePageBlocLoadingState({this.bottomIndicator = false});
 
   @override
   List<Object> get props => [bottomIndicator];
 
 }
 
-class MainScreenBlocLoadedState extends MainScreenBlocStates {
+class HomePageBlocLoadedState extends HomePageBlocStates {
   
   final List<Book> mainList;
   final bool noMoreItems;
 
-  MainScreenBlocLoadedState(this.mainList, {this.noMoreItems = false});
+  HomePageBlocLoadedState(this.mainList, {this.noMoreItems = false});
 
   @override
   List<Object> get props => [mainList];
 
 }
 
-class MainScreenBlocErrorState extends MainScreenBlocStates {
+class HomePageBlocErrorState extends HomePageBlocStates {
 
   @override
   List<Object> get props => [];
@@ -92,18 +92,18 @@ class MainScreenBlocErrorState extends MainScreenBlocStates {
 
 /// BLOC
 
-class MainScreenBloc extends Bloc<MainScreenBlocEvents, MainScreenBlocStates>{
-  MainScreenBloc() : super(MainScreenBlocEmptyState());
+class HomePageBloc extends Bloc<HomePageBlocEvents, HomePageBlocStates>{
+  HomePageBloc() : super(HomePageBlocEmptyState());
 
 
   @override
-  Stream<MainScreenBlocStates> mapEventToState(MainScreenBlocEvents event) async* {
+  Stream<HomePageBlocStates> mapEventToState(HomePageBlocEvents event) async* {
     
-    if (event is MainScreenSearchByGenreEvent) {
+    if (event is HomePageSearchByGenreEvent) {
 
       try {
         // Loading
-        yield MainScreenBlocLoadingState();
+        yield HomePageBlocLoadingState();
 
         var response = await http.get('https://www.googleapis.com/books/v1/volumes?q=subject:${event.genreName}');
 
@@ -119,7 +119,8 @@ class MainScreenBloc extends Bloc<MainScreenBlocEvents, MainScreenBlocStates>{
           authors: volumeInfo["authors"] ?? '',
           description: volumeInfo["description"] ?? '',
           subtitle: volumeInfo["subtitle"] ?? '',
-          categories: volumeInfo["categories"] ?? []
+          categories: volumeInfo["categories"] ?? [],
+          rating: volumeInfo["averageRating"] != null ? volumeInfo["averageRating"].toDouble() : 0.0
         );
 
         print(volumeInfo.length);
@@ -129,15 +130,15 @@ class MainScreenBloc extends Bloc<MainScreenBlocEvents, MainScreenBlocStates>{
         print(book.description);
 
       } catch (e) {
-        bookDebug('main_screen_bloc.dart', 'vent is MainScreenSeachByInputEvent', 'ERROR', e.toString());
+        bookDebug('home_page_bloc.dart', 'vent is HomePageSeachByInputEvent', 'ERROR', e.toString());
       }
     }
 
-    if (event is MainScreenSearchByInputEvent) {
+    if (event is HomePageSearchByInputEvent) {
       
       try {
         // Loading
-        yield MainScreenBlocLoadingState();
+        yield HomePageBlocLoadingState();
         
         Map<String, String> requestHeaders = {'Content-type': 'application/json','Accept': 'application/json'};
 
@@ -151,11 +152,11 @@ class MainScreenBloc extends Bloc<MainScreenBlocEvents, MainScreenBlocStates>{
 
         if (items == null){
 
-          yield MainScreenBlocLoadedState([]); // Empty result
+          yield HomePageBlocLoadedState([]); // Empty result
           return;
         }
 
-        bookDebug('main_screen_bloc.dart', 'event is MainScreenSeachByInputEvent', 'INFO', 'Loaded ${items.length} items. Total mList length is ${event.mainList.length}');
+        bookDebug('home_page_bloc.dart', 'event is HomePageSeachByInputEvent', 'INFO', 'Loaded ${items.length} items. Total mList length is ${event.mainList.length}');
 
         for (var i in items){
 
@@ -169,23 +170,25 @@ class MainScreenBloc extends Bloc<MainScreenBlocEvents, MainScreenBlocStates>{
             authors: volumeInfo["authors"] != null ? List.from(volumeInfo["authors"]) : [],
             description: volumeInfo["description"] ?? '',
             subtitle: volumeInfo["subtitle"] ?? '',
-            categories: volumeInfo["categories"] ?? []
+            categories: volumeInfo["categories"] ?? [],
+            rating: volumeInfo["averageRating"] != null ? volumeInfo["averageRating"].toDouble() : 0.0
           );
-          
+
+
           event.mainList.add(_book);
           
         }
 
         if (items.length < event.maxResults){
           // No more items
-          yield MainScreenBlocLoadedState(event.mainList, noMoreItems: true);
+          yield HomePageBlocLoadedState(event.mainList, noMoreItems: true);
         } else {
           // Loaded state
-          yield MainScreenBlocLoadedState(event.mainList);
+          yield HomePageBlocLoadedState(event.mainList);
         }
 
       } catch (e) {
-        bookDebug('main_screen_bloc.dart', 'event is MainScreenSeachByInputEvent', 'ERROR', e.toString());
+        bookDebug('home_page_bloc.dart', 'event is HomePageSeachByInputEvent', 'ERROR', e.toString());
       }
 
     }

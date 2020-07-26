@@ -74,66 +74,95 @@ class AddQuestionBloc extends Bloc<AddQuestionEvents, AddQuestionStates> {
   @override
   Stream<AddQuestionStates> mapEventToState(AddQuestionEvents event) async* {
     if (event is AddQuestionEvent) {
-
       try {
         yield AddQuestionLoadingState();
 
-        List<String> questionSearch = await fUtils.generateDisplayNameAndUsername(event.question.toLowerCase());
         Timestamp _timestampNow = Timestamp.now();
+        // Add question mark if doesn't exist
+        String question = event.question.contains('?') ? event.question : event.question + '?';
+        // This one needed to break down question for better search
+        List<String> questionSearch =
+            await fUtils.generateDisplayNameAndUsername(question.toLowerCase());
         String ansr1 = event.answer1 == '' ? 'Yes' : event.answer1;
         String ansr2 = event.answer2 == '' ? 'No' : event.answer2;
 
-        CollectionReference booksRef = firestore.collection('BOOKS');
         List<String> answers = event.answer3 == null
             ? [ansr1, ansr2]
             : event.answer4 != null
-            ? [ansr1, ansr2, event.answer3, event.answer4]
-            : [ansr1, ansr2, event.answer3];
+                ? [ansr1, ansr2, event.answer3, event.answer4]
+                : [ansr1, ansr2, event.answer3];
 
-        DocumentSnapshot _doc = await booksRef.document(event.book.id).get();
+        DocumentSnapshot _bookDoc = await booksRef.document(event.book.id).get();
 
-        // Check doc and create if doesn't exist
-        if (!_doc.exists) {
+        // Check book doc and create if doesn't exist
+        if (!_bookDoc.exists) {
           await booksRef.document(event.book.id).setData({
-            'author': event.book.authors,
+            'authors': event.book.authors,
             'id': event.book.id,
             'title': event.book.title,
+            'subtitle': event.book.subtitle,
             'questionsLength': 0,
             'updatedAt': _timestampNow,
+            'imageUrl': event.book.imageUrl,
+            'description': event.book.description,
+            'rating': event.book.rating,
+            'starred': event.book.starred,
+            'categories': event.book.categories
           });
-          _doc = await booksRef.document(event.book.id).get();
+          _bookDoc = await booksRef.document(event.book.id).get();
         }
 
         // Add a question
-        await _doc.reference.collection('QUESTIONS').add({
+        var _newQuestion = await _bookDoc.reference.collection('QUESTIONS').add({
           'answers': answers,
           'author': currentUser.snap.reference,
           'correctAnswer': event.correctAnswer,
           'createdAt': _timestampNow,
-          'question': event.question.contains('?') ? event.question : event.question + '?',
-          'questionSearch': questionSearch
+          'question': question,
+          'questionSearch': questionSearch,
+          'bookRef': booksRef.document(event.book.id)
         });
 
         // Update main Book doc
-        await _doc.reference.updateData({
-          'updatedAt': _timestampNow,
-          'questionsLength': _doc.data['questionsLength'] + 1
-        });
+        await _bookDoc.reference.updateData(
+            {'updatedAt': _timestampNow, 'questionsLength': _bookDoc.data['questionsLength'] + 1});
 
-        yield AddQuestionLoadedState(Question(
-            event.question,
-            questionSearch,
-            event.correctAnswer,
-            currentUser.snap.reference,
-            answers,
-            _timestampNow
-        ));
+        // Update current user
+        await currentUser.snap.reference
+            .updateData({'questionsCount': currentUser.questionsCount + 1});
+
+        // Add question ref to user's 'QUESTION' collection
+        // But first check if it exists
+
+        var _userQuestion = await currentUser.snap.reference
+            .collection('QUESTIONS')
+            .where('question', isEqualTo: question)
+            .where('bookRef', isEqualTo: _bookDoc.reference)
+            .getDocuments();
+
+        if (_userQuestion != null && _userQuestion.documents != null && _userQuestion.documents.isNotEmpty){
+          bookDebug('add_question_bloc.dart', 'event is AddQuestionEvent', 'INFO', 'Trying to add question that already exists.');
+//          yield AddQuestionErrorState('Question already exists.');
+        } else {
+          await currentUser.snap.reference.collection('QUESTIONS').add({
+            'ref': _newQuestion,
+            'answers': answers,
+            'correctAnswer': event.correctAnswer,
+            'createdAt': _timestampNow,
+            'question': event.question.contains('?') ? event.question : event.question + '?',
+            'questionSearch': questionSearch,
+            'bookRef': booksRef.document(event.book.id)
+          });
+        }
+
+        bookDebug('add_question_bloc.dart', 'event is AddQuestionEvent', 'INFO', 'Successfully added question.');
+        yield AddQuestionLoadedState(Question(event.question, questionSearch, event.correctAnswer,
+            currentUser.snap.reference, answers, _timestampNow));
         yield AddQuestionEmptyState();
       } catch (e) {
         bookDebug('add_question_bloc.dart', 'event is AddQuestionEvent', 'ERROR', e.toString());
         yield AddQuestionErrorState();
       }
-
     }
   }
 }

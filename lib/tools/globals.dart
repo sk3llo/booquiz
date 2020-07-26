@@ -2,7 +2,9 @@ import 'dart:io';
 
 import 'package:booquiz/blocs/add_question_bloc.dart';
 import 'package:booquiz/blocs/blocs.dart';
+import 'package:booquiz/blocs/home_page_bloc.dart';
 import 'package:booquiz/blocs/login_bloc.dart';
+import 'package:booquiz/blocs/profile_page_bloc.dart';
 import 'package:booquiz/models/userModel.dart';
 import 'package:booquiz/tools/dimensions.dart';
 import 'package:booquiz/tools/firebase/firestore_utils.dart';
@@ -15,9 +17,11 @@ import 'package:overlay_support/overlay_support.dart';
 // BLOCS
 
 LoginBloc loginBloc = LoginBloc();
-MainScreenBloc mainScreenBloc = MainScreenBloc();
+HomePageBloc homePageBloc = HomePageBloc();
 BookPageBloc bookPageBloc = BookPageBloc();
 AddQuestionBloc addQuestionBloc = AddQuestionBloc();
+ProfilePageBloc profilePageBloc = ProfilePageBloc();
+BookshelfPageBloc bookshelfPageBloc = BookshelfPageBloc();
 
 // DIMENSIONS / SIZE
 final ScreenUtil mSize = ScreenUtil();
@@ -36,6 +40,8 @@ Firestore firestore = Firestore.instance;
 CollectionReference usersRef = firestore.collection('USERS');
 FirebaseAuth auth = FirebaseAuth.instance;
 FirestoreUtils fUtils = FirestoreUtils();
+
+CollectionReference booksRef = firestore.collection('BOOKS');
 
 bool bigScreen;
 

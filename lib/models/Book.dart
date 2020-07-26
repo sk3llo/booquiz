@@ -6,18 +6,18 @@ class Book {
   static final db_title = "title";
   static final db_url = "url";
   static final db_id = "id";
-  static final db_notes = "notes";
   static final db_star = "star";
   static final db_author = "author";
   static final db_description = "description";
   static final db_subtitle = "subtitle";
 
-  String title, imageUrl, id, notes, description, subtitle;
+  String title, imageUrl, id, description, subtitle;
 
   //First author
   List authors, categories;
   bool starred;
   int likes = 0;
+  double rating;
   int questionsLength = 0;
   List<Question> quiz; // Questions and answers
   Timestamp updatedAt;
@@ -29,24 +29,28 @@ class Book {
     @required this.authors,
     @required this.description,
     @required this.subtitle,
+    @required this.rating,
     this.categories,
     this.starred = false,
-    this.notes = "",
     this.likes,
     this.quiz,
     this.updatedAt,
     this.questionsLength
   });
 
-  Book.fromMap(Map<String, dynamic> map) : this(
-    title: map[db_title],
-    imageUrl: map[db_url],
-    id: map[db_id],
-    starred: map[db_star] == 1,
-    notes: map[db_notes],
-    description: map[db_description],
-    authors: map[db_author],
-    subtitle: map[db_subtitle],
+  Book.fromSnap(DocumentSnapshot snap) : this(
+    title: snap.data['title'],
+    imageUrl: snap.data['imageUrl'],
+    id: snap.data['id'],
+    authors: snap.data['authors'],
+    description: snap.data['description'],
+    rating: snap.data['rating'],
+    subtitle: snap.data['subtitle'],
+    starred: snap.data['starred'],
+    questionsLength: snap.data['questionsLength'],
+    updatedAt: snap.data['updatedAt'],
+    categories: snap.data['categories'], // List<String>
+
   );
 
 }

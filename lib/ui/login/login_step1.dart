@@ -6,7 +6,7 @@ import 'package:booquiz/models/loginCreds.dart';
 import 'package:booquiz/tools/defs.dart';
 import 'package:booquiz/tools/globals.dart';
 import 'package:booquiz/ui/custom_widgets/custom_text_field.dart';
-import 'package:booquiz/ui/mainScreen/main_screen.dart';
+import 'package:booquiz/ui/mainPages/home_page.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:flame/widgets/animation_widget.dart';
 import 'package:flare_flutter/flare_actor.dart';
@@ -118,6 +118,7 @@ class _LoginStep1State extends State<LoginStep1> with TickerProviderStateMixin {
                       top: MediaQuery.of(context).size.width / 4,
                       width: 100,
                     ),
+
                   ],
                 );
               }),
@@ -384,7 +385,10 @@ class _LoginStep1State extends State<LoginStep1> with TickerProviderStateMixin {
                         ? Container(
                         width: dimensions.dim25(),
                         height: dimensions.dim25(),
-                        child: CircularProgressIndicator())
+                        child: CircularProgressIndicator(
+                          backgroundColor: Colors.orangeAccent.shade400.withOpacity(.5),
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white)
+                        ))
                         : SingleChildScrollView(
                           child: Text(
                       state is LoginErrorState ? state.message : '',
@@ -526,7 +530,7 @@ class _LoginStep1State extends State<LoginStep1> with TickerProviderStateMixin {
         // Go whether to Main Screen or Pick Username page
         if (currentUser != null && currentUser.username != null){
           if (mounted)
-            Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (c) => MainScreen()));
+            Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (c) => HomePage()));
         } else {
           _pageViewController?.animateToPage(
               1, duration: Duration(milliseconds: 300), curve: Curves.easeIn);
@@ -538,7 +542,7 @@ class _LoginStep1State extends State<LoginStep1> with TickerProviderStateMixin {
       }
       
       if (state is NewUserCreatedState){
-        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (c) => MainScreen()));
+        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (c) => HomePage()));
       }
     });
     
@@ -612,7 +616,7 @@ class _LoginStep1State extends State<LoginStep1> with TickerProviderStateMixin {
               Shadow(color: Colors.teal, blurRadius: 1, offset: Offset.zero),
               Shadow(color: Colors.white, blurRadius: 5, offset: Offset(0, 0)),
             ]),
-            maxLength: 16,
+            maxLength: 20,
             textInputAction: TextInputAction.done,
           ),
         ),
@@ -712,7 +716,7 @@ class _LoginStep1State extends State<LoginStep1> with TickerProviderStateMixin {
             child: FlareActor('assets/flare/success.flr', animation: 'idle', fit: BoxFit.contain,
                 callback: ((_) {
                   setState(() {
-                    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (c) => MainScreen()));
+                    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (c) => HomePage()));
                   });
                 })),
           ),
