@@ -1,3 +1,5 @@
+import 'package:booquiz/models/Book.dart';
+import 'package:booquiz/models/Question.dart';
 import 'package:booquiz/models/userModel.dart';
 import 'package:booquiz/tools/defs.dart';
 import 'package:booquiz/tools/globals.dart';
@@ -9,17 +11,20 @@ import 'package:flutter/material.dart';
 import '../../main.dart';
 
 class FirestoreUtils {
+  //                USER RELATED SHIT
 
   // CREATE USER
   Future<UserModel> createUser(String loginMethod, String username, String password) async {
 //    assert(user != null);
 
-    bookDebug('firestore_utils.dart', 'createUser', 'INFO', 'Trying to create user: ${firebaseUser.email}');
+    bookDebug('firestore_utils.dart', 'createUser', 'INFO',
+        'Trying to create user: ${firebaseUser.email}');
 
     List<String> _usernameSearch = await generateDisplayNameAndUsername(username.toLowerCase());
 
     try {
-      UserModel _user = UserModel.newUser(firebaseUser, loginMethod, username, password, _usernameSearch);
+      UserModel _user =
+          UserModel.newUser(firebaseUser, loginMethod, username, password, _usernameSearch);
       currentUser = _user;
 
       var _data = {
@@ -35,7 +40,7 @@ class FirestoreUtils {
         'lastLogin': Timestamp.now(),
       };
 
-      if (loginMethod == emailProvider && password != null && password.isNotEmpty){
+      if (loginMethod == emailProvider && password != null && password.isNotEmpty) {
         _data.addAll({'password': password});
       }
 
@@ -45,50 +50,13 @@ class FirestoreUtils {
     } catch (e) {
       bookDebug('firestore_utils.dart', 'createUser', 'ERROR', '$e');
     }
-
   }
-//
-//  // CHECK EXIST USER
-//  Future<bool> checkForExistingUser(String email) async {
-//    bool exists = false;
-//    try {
-//      await usersRef.where('email', isEqualTo: email).getDocuments().then((d) {
-//        if (d != null && d.documents.isNotEmpty) {
-//          exists = true;
-//        }
-//      });
-//    } catch (e) {
-//      bookDebug('firestore_utils.dart', 'checkForExistingUser', 'ERROR', '$e');
-//    }
-//    return exists;
-//  }
-//
-//  Future<DocumentSnapshot> checkBlocked(UserModel userToCheck) async {
-//
-//    try {
-//      DocumentSnapshot myBlockDoc;
-//
-//      var query = await userToCheck.snap.reference.collection(reportedBy).where('ref', isEqualTo: currentUser.snap.reference.path).getDocuments();
-//
-//      if (query != null && query.documents.isNotEmpty)
-//        myBlockDoc = query.documents.first;
-//
-//
-//      return myBlockDoc;
-//    } catch (e) {
-//      bookDebug('firestore_utils.dart', 'checkBlocked', 'ERROR', '$e');
-//    }
-//
-//  }
-//
+
   // DUPLICATE USERNAME
   Future<bool> checkDuplicateUsername(String username) async {
     bool duplicate = false;
     try {
-      await usersRef
-          .where('usernameLower', isEqualTo: username)
-          .getDocuments()
-          .then((d) {
+      await usersRef.where('usernameLower', isEqualTo: username).getDocuments().then((d) {
         if (d != null && d.documents.isNotEmpty) {
           duplicate = true;
         }
@@ -104,10 +72,7 @@ class FirestoreUtils {
     bool duplicate = false;
 
     try {
-      await usersRef
-          .where('email', isEqualTo: email)
-          .getDocuments()
-          .then((d) {
+      await usersRef.where('email', isEqualTo: email).getDocuments().then((d) {
         if (d != null && d.documents.isNotEmpty) {
           duplicate = true;
         }
@@ -180,4 +145,155 @@ class FirestoreUtils {
     return mainList;
   }
 
+  //                 USER BOOKS RELATED SHIT
+
+  Future<List<Question>> getNotCompletedQuestions(String bookId, {int limit = 5, Book optionalLoadedUserBook}) async {
+    List<Question> questionList = [];
+
+    try {
+      // First get last completed question from user's `BOOKS` collection
+      Book _userBook = optionalLoadedUserBook ?? Book.fromSnap(await currentUser.snap.reference.collection('BOOKS').document(bookId).get());
+      
+      // Now check if exists
+      if (_userBook != null) {
+        // Check if last completed question exists
+        if (_userBook.lastCompletedQuestion.path.isNotEmpty) {
+          DocumentSnapshot lastCompletedQuestionSnap = await _userBook.lastCompletedQuestion.get();
+          // Get all not completed questions based on last question
+          QuerySnapshot allNotCompletedQuestions = await booksRef
+              .document(bookId)
+              .collection('QUESTIONS')
+              .orderBy('createdAt', descending: true)
+              .startAtDocument(lastCompletedQuestionSnap)
+              .limit(limit)
+              .getDocuments();
+
+          if (allNotCompletedQuestions.documents.isNotEmpty) {
+            allNotCompletedQuestions.documents.forEach((_doc) {
+              questionList.add(Question.fromSnap(_doc));
+            });
+          }
+
+          bookDebug('firestore_utils.dart', 'getNotCompletedQuestions', 'INFO',
+              'Loaded ${questionList.length} NOT completed questions.');
+        } else {
+          // If doesn't exists then get all questions
+          QuerySnapshot allNotCompletedQuestions = await booksRef
+              .document(bookId)
+              .collection('QUESTIONS')
+              .orderBy('createdAt', descending: true)
+              .limit(limit)
+              .getDocuments();
+
+          if (allNotCompletedQuestions.documents.isNotEmpty) {
+            allNotCompletedQuestions.documents.forEach((_doc) {
+              questionList.add(Question.fromSnap(_doc));
+            });
+          }
+        }
+      }
+
+      return questionList;
+    } catch (e) {
+      bookDebug('firestore_utils.dart', 'getNotCompletedQuestions', 'ERROR', e.toString());
+    }
+  }
+
+  Future<int> getMyInProgressQuestionsLength(String bookId) async {
+    try {
+      Book _book = Book.fromSnap(await booksRef.document(bookId).get());
+
+      var _myBookQuiz =
+          await currentUser.snap.reference.collection('QUESTIONS').document(bookId).get();
+
+      return _book.questionsLength - _myBookQuiz.data['questionsCompleted'];
+    } catch (e) {
+      bookDebug('firestore_utils.dart', 'getNotCompletedQuestionsLength', 'ERROR', e.toString());
+    }
+  }
+
+  Future<int> getMyCompletedQuestionsLength(String bookId) async {
+    try {
+      DocumentSnapshot myBookSnap =
+          await currentUser.snap.reference.collection('BOOKS').document(bookId).get();
+
+      Book updatedBook = Book.fromSnap(await booksRef.reference().document(bookId).get());
+      // The difference is the amount of questions left;
+      // Null means there are no MF QUESTIONS HOORAY;
+
+      if (updatedBook != null && myBookSnap.exists && myBookSnap.data != null) {
+        return updatedBook.questionsLength - myBookSnap.data['questionsCompleted'];
+      } else {
+        return null;
+      }
+    } catch (e) {
+      bookDebug('firestore_utils.dart', 'getMyCompletedQuestionsLength', 'ERROR', e.toString());
+    }
+  }
+
+  Future<List<Book>>  getMyInProgressBooks(int limit, {DocumentSnapshot startAfterDoc}) async {
+    try {
+      QuerySnapshot booksInProgressSnap;
+      List<Book> listOfCompletedBooks = [];
+      
+      if (startAfterDoc != null){
+        booksInProgressSnap = await currentUser.snap.reference
+            .collection('BOOKS')
+            .where('completed', isEqualTo: false)
+            .startAfterDocument(startAfterDoc)
+            .limit(limit)
+            .getDocuments();
+      } else {
+        booksInProgressSnap = await currentUser.snap.reference
+            .collection('BOOKS')
+            .where('completed', isEqualTo: false)
+            .limit(limit)
+            .getDocuments();
+      }
+
+      if (booksInProgressSnap != null && booksInProgressSnap.documents.isNotEmpty) {
+        booksInProgressSnap.documents.forEach((_doc) {
+          listOfCompletedBooks.add(Book.fromSnap(_doc));
+        });
+      }
+
+      return listOfCompletedBooks;
+    } catch (e) {
+      bookDebug('firestore_utils.dart', 'getMyInProgressBooks', 'ERROR', e.toString());
+    }
+  }
+
+  Future<List<Book>> getMyCompletedBooks(int limit, {DocumentSnapshot startAfterDoc}) async {
+    try {
+      QuerySnapshot completedBooksSnap;
+      List<Book> listOfCompletedBooks = [];
+
+      if (startAfterDoc != null){
+        completedBooksSnap = await currentUser.snap.reference
+            .collection('BOOKS')
+            .where('completed', isEqualTo: true)
+            .orderBy('completedAt', descending: true)
+            .startAfterDocument(startAfterDoc)
+            .limit(limit)
+            .getDocuments();
+      } else {
+        completedBooksSnap = await currentUser.snap.reference
+            .collection('BOOKS')
+            .where('completed', isEqualTo: true)
+            .orderBy('completedAt', descending: true)
+            .limit(limit)
+            .getDocuments();
+      }
+
+      if (completedBooksSnap != null && completedBooksSnap.documents.isNotEmpty) {
+        completedBooksSnap.documents.forEach((_doc) {
+          listOfCompletedBooks.add(Book.fromSnap(_doc));
+        });
+      }
+
+      return listOfCompletedBooks;
+    } catch (e) {
+      bookDebug('firestore_utils.dart', 'getMyCompletedBooks', 'ERROR', e.toString());
+    }
+  }
 }

@@ -113,27 +113,32 @@ class AddQuestionBloc extends Bloc<AddQuestionEvents, AddQuestionStates> {
         }
 
         // Add a question
-        var _newQuestion = await _bookDoc.reference.collection('QUESTIONS').add({
+
+
+        // Create empty doc to get ID
+        var _newQuestion = _bookDoc.reference.collection('QUESTIONS').document();
+        // Add question to book
+        await _newQuestion.setData({
           'answers': answers,
           'author': currentUser.snap.reference,
           'correctAnswer': event.correctAnswer,
           'createdAt': _timestampNow,
           'question': question,
           'questionSearch': questionSearch,
-          'bookRef': booksRef.document(event.book.id)
+          'bookRef': booksRef.document(event.book.id),
+          'id': _newQuestion.documentID
         });
 
-        // Update main Book doc
+        // Update book's `updatedAt`
         await _bookDoc.reference.updateData(
             {'updatedAt': _timestampNow, 'questionsLength': _bookDoc.data['questionsLength'] + 1});
 
-        // Update current user
+        // Update current user's `questionCount`
         await currentUser.snap.reference
             .updateData({'questionsCount': currentUser.questionsCount + 1});
 
         // Add question ref to user's 'QUESTION' collection
         // But first check if it exists
-
         var _userQuestion = await currentUser.snap.reference
             .collection('QUESTIONS')
             .where('question', isEqualTo: question)
@@ -144,8 +149,10 @@ class AddQuestionBloc extends Bloc<AddQuestionEvents, AddQuestionStates> {
           bookDebug('add_question_bloc.dart', 'event is AddQuestionEvent', 'INFO', 'Trying to add question that already exists.');
 //          yield AddQuestionErrorState('Question already exists.');
         } else {
+          // Add question to user
           await currentUser.snap.reference.collection('QUESTIONS').add({
             'ref': _newQuestion,
+            'id': _newQuestion.documentID,
             'answers': answers,
             'correctAnswer': event.correctAnswer,
             'createdAt': _timestampNow,

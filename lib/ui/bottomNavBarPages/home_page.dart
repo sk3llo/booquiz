@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:ui';
 
-import 'package:booquiz/blocs/home_page_bloc.dart';
+import 'package:booquiz/blocs/bottomNavBar/home_page_bloc.dart';
 import 'package:booquiz/models/Book.dart';
 import 'package:booquiz/tools/globals.dart';
 import 'package:booquiz/ui/book_page.dart';
 import 'package:booquiz/ui/custom_widgets/book_widget.dart';
+import 'package:booquiz/ui/custom_widgets/custom_loading_indicator.dart';
 import 'package:booquiz/ui/custom_widgets/custom_text_field.dart';
 import 'package:booquiz/ui/login/login_step1.dart';
 import 'package:booquiz/ui/sliver_app_bar_delegate.dart';
@@ -31,7 +32,7 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
   // Search
   TextEditingController searchFieldController = TextEditingController();
   FocusNode searchFieldFocus = FocusNode();
@@ -41,6 +42,7 @@ class _HomePageState extends State<HomePage> {
 
 
   int bottonNavBarIndex = 0;
+  int _preserveIndex = 0;
 
   // Search Books View defs
   String oldSearch = '';
@@ -70,9 +72,8 @@ class _HomePageState extends State<HomePage> {
         body: Column(
           children: <Widget>[
             Expanded(
-              child: PageView(
-                controller: _pageController,
-                physics: NeverScrollableScrollPhysics(),
+              child: IndexedStack(
+                index: _preserveIndex,
                 children: <Widget>[
                   // Page 1
                   BlocBuilder(
@@ -119,37 +120,37 @@ class _HomePageState extends State<HomePage> {
                                                     Radius.circular(mainPadding))),
                                             onPressed: searchFieldController.text.isNotEmpty
                                                 ? () {
-                                                    // If text hasn't changes just fuck off
-                                                    if (searchBookView &&
-                                                        oldSearch == searchFieldController.text)
-                                                      return;
+                                              // If text hasn't changes just fuck off
+                                              if (searchBookView &&
+                                                  oldSearch == searchFieldController.text)
+                                                return;
 
-                                                    if (searchFieldController.text
-                                                        .trim()
-                                                        .isNotEmpty) {
-                                                      if (!searchBookView)
-                                                        Timer.periodic(
-                                                            Duration(milliseconds: 300), (timer) {
-                                                          if (mounted)
-                                                            setState(() {
-                                                              searchBookView = true;
-                                                            });
-                                                          timer.cancel();
-                                                        });
-                                                      searchBooksList = [];
-                                                      oldSearch = searchFieldController.text;
-                                                      homePageBloc.add(
-                                                          HomePageSearchByInputEvent(
-                                                              searchFieldController.text,
-                                                              mainList: searchBooksList));
-                                                    } else {
+                                              if (searchFieldController.text
+                                                  .trim()
+                                                  .isNotEmpty) {
+                                                if (!searchBookView)
+                                                  Timer.periodic(
+                                                      Duration(milliseconds: 300), (timer) {
+                                                    if (mounted)
                                                       setState(() {
-                                                        searchBookView = false;
+                                                        searchBookView = true;
                                                       });
-                                                    }
-                                                    FocusScope.of(context)
-                                                        .requestFocus(FocusNode());
-                                                  }
+                                                    timer.cancel();
+                                                  });
+                                                searchBooksList = [];
+                                                oldSearch = searchFieldController.text;
+                                                homePageBloc.add(
+                                                    HomePageSearchByInputEvent(
+                                                        searchFieldController.text,
+                                                        mainList: searchBooksList));
+                                              } else {
+                                                setState(() {
+                                                  searchBookView = false;
+                                                });
+                                              }
+                                              FocusScope.of(context)
+                                                  .requestFocus(FocusNode());
+                                            }
                                                 : null,
                                             child: Text(
                                               searchFieldController.text.isNotEmpty
@@ -224,10 +225,8 @@ class _HomePageState extends State<HomePage> {
                                               },
                                               child: Container(
                                                 width: MediaQuery.of(context).size.width,
-                                                height: MediaQuery.of(context).size.height -
-                                                    dimensions.dim95() -
-                                                    56.0,
-                                                color: Colors.transparent,
+                                                height: MediaQuery.of(context).size.height,
+                                                color: Colors.white.withOpacity(0),
                                               ),
                                             )
                                                 : Container(),
@@ -259,60 +258,57 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget searchBarWidget() {
-    return Hero(
-      tag: 'searchBarWidget',
-      child: Container(
-        alignment: Alignment.centerLeft,
-        height: dimensions.buttonsHeight(),
-        margin: EdgeInsets.only(
-            left: dimensions.dim8(), bottom: dimensions.dim12(), top: dimensions.dim10()),
-        width: MediaQuery.of(context).size.width / 1.5,
-        padding: EdgeInsets.only(
-            top: dimensions.dim4(), bottom: dimensions.dim4(), left: dimensions.dim8()),
-        decoration: ShapeDecoration(
-            color: Colors.white.withOpacity(.5),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(dimensions.mainCornerRadius())),
-                side: BorderSide(color: Colors.white))),
-        child: CustomTextField(
-          expands: false,
-          controller: searchFieldController,
-          focusNode: searchFieldFocus,
-          style: TextStyle(),
-          decoration: InputDecoration(
-            hintText: "Search books",
-            hintStyle: TextStyle(fontSize: dimensions.sp14(), color: colorBlueDarkText),
-            enabledBorder: InputBorder.none,
-            border: InputBorder.none,
-            focusedBorder: InputBorder.none,
-          ),
-          onSubmitted: (t) {
-            // Search field submitted
-            if (t.trim().isNotEmpty) {
-              Timer.periodic(Duration(milliseconds: 300), (timer) {
-                if (mounted)
-                  setState(() {
-                    searchBookView = true;
-                  });
-                timer.cancel();
-              });
-              searchBooksList = [];
-              oldSearch = t;
-              homePageBloc.add(HomePageSearchByInputEvent(t, mainList: searchBooksList));
-            } else {
-              setState(() {
-                searchBookView = false;
-              });
-            }
-          },
-          onTap: () {
-            setState(() {});
-          },
-          onChanged: (t) {
-            setState(() {});
-          },
-          textInputAction: TextInputAction.done,
+    return Container(
+      alignment: Alignment.centerLeft,
+      height: dimensions.buttonsHeight(),
+      margin: EdgeInsets.only(
+          left: dimensions.dim8(), bottom: dimensions.dim12(), top: dimensions.dim10()),
+      width: MediaQuery.of(context).size.width / 1.5,
+      padding: EdgeInsets.only(
+          top: dimensions.dim4(), bottom: dimensions.dim4(), left: dimensions.dim8()),
+      decoration: ShapeDecoration(
+          color: Colors.white.withOpacity(.5),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(dimensions.mainCornerRadius())),
+              side: BorderSide(color: Colors.white))),
+      child: CustomTextField(
+        expands: false,
+        controller: searchFieldController,
+        focusNode: searchFieldFocus,
+        style: TextStyle(),
+        decoration: InputDecoration(
+          hintText: "Search books",
+          hintStyle: TextStyle(fontSize: dimensions.sp14(), color: colorBlueDarkText),
+          enabledBorder: InputBorder.none,
+          border: InputBorder.none,
+          focusedBorder: InputBorder.none,
         ),
+        onSubmitted: (t) {
+          // Search field submitted
+          if (t.trim().isNotEmpty) {
+            Timer.periodic(Duration(milliseconds: 300), (timer) {
+              if (mounted)
+                setState(() {
+                  searchBookView = true;
+                });
+              timer.cancel();
+            });
+            searchBooksList = [];
+            oldSearch = t;
+            homePageBloc.add(HomePageSearchByInputEvent(t, mainList: searchBooksList));
+          } else {
+            setState(() {
+              searchBookView = false;
+            });
+          }
+        },
+        onTap: () {
+          setState(() {});
+        },
+        onChanged: (t) {
+          setState(() {});
+        },
+        textInputAction: TextInputAction.done,
       ),
     );
   }
@@ -823,12 +819,12 @@ class _HomePageState extends State<HomePage> {
           onAnimationComplete: (a, b) {},
           selectedIndex: bottonNavBarIndex,
           onItemSelected: (i) {
-            if (bottonNavBarIndex != i)
-                bottonNavBarIndex = i;
+            if (bottonNavBarIndex != i) {
+              bottonNavBarIndex = i;
+              _preserveIndex = bottonNavBarIndex;
+              setState(() {});
+            }
                // TODO: Add 'Continue quiz, Updated book questions, Save for future, Similar books' and Comments sections
-
-            _pageController.jumpToPage(i);
-            setState(() {});
           },
           decoration: NavBarDecoration(
             borderRadius: BorderRadius.circular(10.0),
@@ -915,9 +911,7 @@ class _HomePageState extends State<HomePage> {
                         width: dimensions.dim36(),
                         height: dimensions.dim36(),
                         margin: EdgeInsets.only(top: dimensions.dim6()),
-                        child: CircularProgressIndicator(
-                            backgroundColor: Colors.orangeAccent.shade400.withOpacity(.5),
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white)));
+                        child: CustomLoadingIndicator());
                   }
 
                   // If loading more show all + loading indicator
@@ -1008,4 +1002,7 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }

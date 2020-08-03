@@ -9,24 +9,21 @@ import 'package:flutter/cupertino.dart';
 class BookWidget extends StatelessWidget {
 
   final Book book;
+  final int questionsCompleted;
+  final int questionsInProgress;
   final Function(Book) onBookTapped;
 
-  BookWidget(this.book, {this.onBookTapped});
+  BookWidget(this.book, {this.onBookTapped, this.questionsCompleted, this.questionsInProgress});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: dimensions.dim60(),
-//      height: dimensions.dim80(),
       child: Card(
-//        margin: EdgeInsets.zero,
         elevation: 0,
         color: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(12)),
-//          side: BorderSide(
-//            color: Colors.blue.shade100.withOpacity(.5),width: 1
-//          )
         ),
         child: ListTile(
           contentPadding: EdgeInsets.only(right: 16.0, left: 8),
@@ -63,8 +60,9 @@ class BookWidget extends StatelessWidget {
             book.authors.isEmpty ? 'Unknown' : book?.authors?.first?.toString(),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-
           ),
+
+
         ),
       ),
     );

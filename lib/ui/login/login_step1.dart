@@ -5,10 +5,10 @@ import 'package:booquiz/main.dart';
 import 'package:booquiz/models/loginCreds.dart';
 import 'package:booquiz/tools/defs.dart';
 import 'package:booquiz/tools/globals.dart';
+import 'package:booquiz/ui/bottomNavBarPages/home_page.dart';
+import 'package:booquiz/ui/custom_widgets/custom_loading_indicator.dart';
 import 'package:booquiz/ui/custom_widgets/custom_text_field.dart';
-import 'package:booquiz/ui/mainPages/home_page.dart';
 import 'package:email_validator/email_validator.dart';
-import 'package:flame/widgets/animation_widget.dart';
 import 'package:flare_flutter/flare_actor.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/widgets.dart';
@@ -16,11 +16,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'dart:io';
 import 'package:flutter_screenutil/screenutil.dart';
-import 'package:sa_stateless_animation/sa_stateless_animation.dart';
-import 'package:flame/flame.dart';
-import 'package:flame/sprite.dart';
-import 'package:flame/spritesheet.dart';
-import 'package:flame/animation.dart' as anim;
 
 class LoginStep1 extends StatefulWidget {
   @override
@@ -28,9 +23,6 @@ class LoginStep1 extends StatefulWidget {
 }
 
 class _LoginStep1State extends State<LoginStep1> with TickerProviderStateMixin {
-  // Animation
-  Sprite flyingBookSprite;
-  anim.Animation animation;
 
   // Email / Password
   bool emailChecked = false;
@@ -92,32 +84,32 @@ class _LoginStep1State extends State<LoginStep1> with TickerProviderStateMixin {
                     emailLogin(state),
 
                     // HUISASI
-                    Positioned(
-                      child: Container(
-                        height: dimensions.dim60(),
-                        width: dimensions.dim40(),
-                        color: Colors.green,
-                        child: RawMaterialButton(
-                          onPressed: () async {
-                            // Log Out
-                           loginBloc.add(LogOutEvent());
-
-                            print(state);
-
-                            var gg = await dbHelper.checkLogin();
-                            print(gg?.email);
-                            print(gg?.provider);
-                            print(gg?.passwordOrAccessToken);
-                          },
-                          child: Text(
-                            'HUISASI',
-                            style: TextStyle(color: Colors.black, fontSize: dimensions.sp18()),
-                          ),
-                        ),
-                      ),
-                      top: MediaQuery.of(context).size.width / 4,
-                      width: 100,
-                    ),
+//                    Positioned(
+//                      child: Container(
+//                        height: dimensions.dim60(),
+//                        width: dimensions.dim40(),
+//                        color: Colors.green,
+//                        child: RawMaterialButton(
+//                          onPressed: () async {
+//                            // Log Out
+//                           loginBloc.add(LogOutEvent());
+//
+//                            print(state);
+//
+//                            var gg = await dbHelper.checkLogin();
+//                            print(gg?.email);
+//                            print(gg?.provider);
+//                            print(gg?.passwordOrAccessToken);
+//                          },
+//                          child: Text(
+//                            'HUISASI',
+//                            style: TextStyle(color: Colors.black, fontSize: dimensions.sp18()),
+//                          ),
+//                        ),
+//                      ),
+//                      top: MediaQuery.of(context).size.width / 4,
+//                      width: 100,
+//                    ),
 
                   ],
                 );
@@ -385,10 +377,7 @@ class _LoginStep1State extends State<LoginStep1> with TickerProviderStateMixin {
                         ? Container(
                         width: dimensions.dim25(),
                         height: dimensions.dim25(),
-                        child: CircularProgressIndicator(
-                          backgroundColor: Colors.orangeAccent.shade400.withOpacity(.5),
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white)
-                        ))
+                        child: CustomLoadingIndicator())
                         : SingleChildScrollView(
                           child: Text(
                       state is LoginErrorState ? state.message : '',

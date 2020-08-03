@@ -7,6 +7,22 @@ class Dimensions {
 
   // ALL DIM FOR WIDGETS (EXCEPT TEXT)
 
+  double dim700 (){
+    return mSize.setHeight(1400);
+  }
+
+  double dim650 (){
+    return mSize.setHeight(1300);
+  }
+
+  double dim600 (){
+    return mSize.setHeight(1200);
+  }
+
+  double dim500 (){
+    return mSize.setHeight(1000);
+  }
+
   double dim400 (){
     return mSize.setHeight(800);
   }
@@ -57,6 +73,10 @@ class Dimensions {
 
   double dim335 (){
     return mSize.setHeight(670);
+  }
+
+  double dim320 (){
+    return mSize.setHeight(640);
   }
 
   double dim300 (){
@@ -191,8 +211,48 @@ class Dimensions {
     return mSize.setHeight(340);
   }
 
+  double dim169 (){
+    return mSize.setHeight(338);
+  }
+
+  double dim168 (){
+    return mSize.setHeight(336);
+  }
+
+  double dim167 (){
+    return mSize.setHeight(334);
+  }
+
+  double dim166 (){
+    return mSize.setHeight(332);
+  }
+
+  double dim165 (){
+    return mSize.setHeight(330);
+  }
+
   double dim160 (){
     return mSize.setHeight(320);
+  }
+
+  double dim155(){
+    return mSize.setHeight(310);
+  }
+
+  double dim154 (){
+    return mSize.setHeight(308);
+  }
+
+  double dim153 (){
+    return mSize.setHeight(306);
+  }
+
+  double dim152 (){
+    return mSize.setHeight(304);
+  }
+
+  double dim151 (){
+    return mSize.setHeight(302);
   }
 
   double dim150 (){

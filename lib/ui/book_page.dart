@@ -2,6 +2,7 @@ import 'package:booquiz/blocs/blocs.dart';
 import 'package:booquiz/models/Book.dart';
 import 'package:booquiz/models/Question.dart';
 import 'package:booquiz/ui/add_question_page.dart';
+import 'package:booquiz/ui/quiz_page.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -36,7 +37,8 @@ class _BookPageState extends State<BookPage> with TickerProviderStateMixin {
     // Init shit
     tabController = TabController(length: 2, vsync: this);
 
-    bookPageBloc.add(BookPageCheckQuestionsEvent(widget.book));
+    // Check questions
+    bookPageBloc.add(BookPageLoadDetailsEvent(widget.book));
   }
 
   @override
@@ -74,14 +76,17 @@ class _BookPageState extends State<BookPage> with TickerProviderStateMixin {
                       ),
                     ),
                   ),
-                  title: Text(state is BookPageLoadedState
-                      ? state.updatedBook.questionsLength == 1
-                          ? state.updatedBook.questionsLength.toString() + ' question'
-                          : state.updatedBook.questionsLength.toString() + ' questions'
-                      : state is BookPageLoadingState ? '' :
-                  questions.length == 1
-                          ? '${questions.length} question'
-                          : '${questions.length} questions'),
+                  title: Text(state is BookPageEmptyState
+                      ? 'No questions yet'
+                      : state is BookPageLoadingState
+                          ? ''
+                          : state is BookPageLoadedState
+                              ? state.updatedBook.questionsLength == 1
+                                  ? state.updatedBook.questionsLength.toString() + ' question'
+                                  : state.updatedBook.questionsLength.toString() + ' questions'
+                              : questions.length == 1
+                                  ? '${questions.length} question'
+                                  : '${questions.length} questions'),
                   centerTitle: true,
                   actions: <Widget>[
                     Tooltip(
@@ -260,7 +265,12 @@ class _BookPageState extends State<BookPage> with TickerProviderStateMixin {
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.all(Radius.circular(mainPadding)),
                           side: BorderSide(color: Colors.white, width: 2)),
-                      onPressed: () {},
+                      onPressed: () {
+                        if (state is BookPageLoadedState) {
+                          Navigator.of(context).push(
+                              MaterialPageRoute(builder: (context) => QuizPage(state.updatedBook)));
+                        }
+                      },
                       child: Text(
                         'Start quiz',
                         style: TextStyle(

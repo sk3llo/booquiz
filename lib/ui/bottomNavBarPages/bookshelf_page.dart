@@ -5,6 +5,9 @@ import 'package:booquiz/blocs/blocs.dart';
 import 'package:booquiz/models/Book.dart';
 import 'package:booquiz/tools/defs.dart';
 import 'package:booquiz/tools/globals.dart';
+import 'package:booquiz/ui/custom_widgets/book_widget.dart';
+import 'package:booquiz/ui/custom_widgets/bookshelf_book_widget.dart';
+import 'package:booquiz/ui/custom_widgets/custom_loading_indicator.dart';
 import 'package:booquiz/ui/custom_widgets/custom_text_field.dart';
 import 'package:booquiz/ui/sliver_app_bar_delegate.dart';
 import 'package:flutter/material.dart';
@@ -15,12 +18,14 @@ class BookshelfPage extends StatefulWidget {
   _BookshelfPageState createState() => _BookshelfPageState();
 }
 
-class _BookshelfPageState extends State<BookshelfPage> with TickerProviderStateMixin {
+class _BookshelfPageState extends State<BookshelfPage> with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   TabController _tabController;
 
   FocusNode searchFieldFocus = FocusNode();
 
   String oldSearch = '';
+
+  int limit = 10;
 
   // Show in progress or completed books
   bool inProgressSelected = true;
@@ -33,12 +38,15 @@ class _BookshelfPageState extends State<BookshelfPage> with TickerProviderStateM
   ScrollController _inProgressListController = ScrollController();
   ScrollController _completedListController = ScrollController();
 
-  List<Book> inProgressList = [];
+  List<Book> listInProgress = [];
   List<Book> completedList = [];
 
   @override
   void initState() {
     _tabController = TabController(length: 2, vsync: this);
+
+    // Load books in progress
+    bookshelfPageBloc.add(BookshelfPageLoadInProgressEvent(listInProgress, limit: limit));
 
     super.initState();
   }
@@ -48,10 +56,9 @@ class _BookshelfPageState extends State<BookshelfPage> with TickerProviderStateM
     return BlocBuilder(
       bloc: bookshelfPageBloc,
       builder: (context, state) {
-
         return Container(
-            height:
-            MediaQuery.of(context).size.height - dimensions.dim58(), // Height minus nav bar height]
+            height: MediaQuery.of(context).size.height -
+                dimensions.dim58(), // Height minus nav bar height]
             child: CustomScrollView(
               physics: BouncingScrollPhysics(),
               slivers: <Widget>[
@@ -75,9 +82,10 @@ class _BookshelfPageState extends State<BookshelfPage> with TickerProviderStateM
                                   Colors.orange[100],
                                 ])),
                         alignment: Alignment.bottomCenter,
-                        padding: EdgeInsets.only(top: dimensions.dim32()),
+                        padding: EdgeInsets.only(top: dimensions.dim36()),
                         child: Column(
                           children: <Widget>[
+                            // Search field
                             Row(
                               children: <Widget>[
                                 searchBarWidget(),
@@ -85,14 +93,11 @@ class _BookshelfPageState extends State<BookshelfPage> with TickerProviderStateM
                                   margin: EdgeInsets.only(left: mainPadding),
                                   child: MaterialButton(
                                     shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.all(Radius.circular(mainPadding))),
-                                    onPressed: () {
-
-                                    },
+                                        borderRadius:
+                                            BorderRadius.all(Radius.circular(mainPadding))),
+                                    onPressed: () {},
                                     child: Text(
-                                      searchFieldController.text.isNotEmpty
-                                          ? 'Search'
-                                          : '',
+                                      searchFieldController.text.isNotEmpty ? 'Search' : '',
                                       style: TextStyle(
                                           fontSize: dimensions.sp14(), color: colorBlueDarkText),
                                     ),
@@ -116,8 +121,8 @@ class _BookshelfPageState extends State<BookshelfPage> with TickerProviderStateM
                                       child: Text(
                                         'In progress',
                                         softWrap: true,
-                                        style:
-                                        TextStyle(color: Colors.black38, fontSize: dimensions.sp15()),
+                                        style: TextStyle(
+                                            color: Colors.black38, fontSize: dimensions.sp15()),
                                       ),
                                     ),
                                   ),
@@ -125,8 +130,8 @@ class _BookshelfPageState extends State<BookshelfPage> with TickerProviderStateM
                                     child: Tab(
                                       child: Text(
                                         'Completed',
-                                        style:
-                                        TextStyle(color: Colors.black38, fontSize: dimensions.sp15()),
+                                        style: TextStyle(
+                                            color: Colors.black38, fontSize: dimensions.sp15()),
                                       ),
                                     ),
                                   ),
@@ -149,17 +154,16 @@ class _BookshelfPageState extends State<BookshelfPage> with TickerProviderStateM
                                   begin: Alignment.topCenter,
                                   end: Alignment.bottomCenter,
                                   colors: [
-                                    Colors.orange[100].withOpacity(.5),
-                                    Colors.white30.withOpacity(.5),
-                                    Colors.white70.withOpacity(.5),
-                                    Colors.deepOrange[50].withOpacity(.5),
-                                  ])),
+                                Colors.orange[100].withOpacity(.5),
+                                Colors.white30.withOpacity(.5),
+                                Colors.white70.withOpacity(.5),
+                                Colors.deepOrange[50].withOpacity(.5),
+                              ])),
                         ),
 
                         Container(
                           height: MediaQuery.of(context).size.height - dimensions.dim200(),
                           alignment: Alignment.topCenter,
-                          color: Colors.black54,
                           child: PageView(
                             controller: _pageViewController,
                             children: <Widget>[
@@ -174,7 +178,6 @@ class _BookshelfPageState extends State<BookshelfPage> with TickerProviderStateM
                 )
               ],
             ));
-
       },
     );
   }
@@ -209,14 +212,9 @@ class _BookshelfPageState extends State<BookshelfPage> with TickerProviderStateM
           ),
           onSubmitted: (t) {
             // Search field submitted
-
           },
-          onTap: () {
-            setState(() {});
-          },
-          onChanged: (t) {
-            setState(() {});
-          },
+          onTap: () {},
+          onChanged: (t) {},
           textInputAction: TextInputAction.done,
         ),
       ),
@@ -224,23 +222,75 @@ class _BookshelfPageState extends State<BookshelfPage> with TickerProviderStateM
   }
 
   Widget inProgressWidget(dynamic state) {
-    return ListView.builder(
-        controller: _inProgressListController,
-        itemCount: inProgressList.length,
-      itemBuilder: (context, pos) {
-        return Container();
-      },
-    );
+
+    // First loading indicator
+    if (state is BookshelfPageLoadingState && state.mList.isEmpty){
+      return Container(
+        alignment: Alignment.center,
+        child: CustomLoadingIndicator(),
+      );
+
+    } else {
+
+      return GridView.builder(
+          itemCount: state is BookshelfPageInProgressLoadedState
+              ? listInProgress.length
+              : inProgressSelected && state is BookshelfPageLoadingState
+              ? listInProgress.length + 1 // Main shit + loading indicator
+              : 1,
+
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+          ),
+          itemBuilder: (context, pos) {
+
+            // Show bottom loading indicator
+            if (state is BookshelfPageLoadingState && listInProgress.isNotEmpty){
+              if (pos == listInProgress.length - 1)
+                return CustomLoadingIndicator();
+              else
+                return BookshelfBookWidget(
+                    mainBook: listInProgress[pos]);
+            }
+
+            if (state is BookshelfPageInProgressLoadedState && listInProgress.isNotEmpty){
+              return Container(
+//                padding: EdgeInsets.only(left: dimensions.dim24(), right: dimensions.dim24(), bottom: dimensions.dim8()),
+                child: BookshelfBookWidget(
+                  mainBook: listInProgress[pos]
+                ),
+              );
+            }
+            else {
+              return Container(
+                child: Text(
+                  'No books yet =\\',
+                  style: TextStyle(
+                      fontSize: dimensions.sp14(),
+                      color: loginTextColor
+                  ),
+                ),
+              );
+            }
+
+          });
+    }
   }
 
   Widget completedWidget(dynamic state) {
     return ListView.builder(
       controller: _completedListController,
-      itemCount: inProgressList.length,
+      itemCount: state is BookshelfPageCompletedLoadedState
+          ? completedList.length
+          : !inProgressSelected && state is BookshelfPageLoadingState
+          ? completedList.length + 1 // Main shit + loading indicator
+          : 1,
       itemBuilder: (context, pos) {
         return Container();
       },
     );
   }
 
+  @override
+  bool get wantKeepAlive => true;
 }

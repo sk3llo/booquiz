@@ -5,7 +5,7 @@ description: A new Flutter project.
 # pub.dev using `pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.0.0+3 # Old one
+version: 1.0.0+4 # Old one
 
 environment:
   sdk: ">=2.7.0 <3.0.0"
@@ -33,24 +33,24 @@ dependencies:
   cached_network_image: ^2.0.0
 
   # Animations
-  animated_text_kit: ^2.0.0
-  simple_animations: ^1.3.6
-  sa_stateless_animation: ^1.0.1
+#  animated_text_kit: ^2.0.0
+#  simple_animations: ^1.3.6
+#  sa_stateless_animation: ^1.0.1
   flare_flutter: ^2.0.4 # Flare
 
-  # Engines
-  flame: ^0.22.0 # Flame
-
-  # ETC
+  # UI
   overlay_support: ^1.0.2
-  email_validator: ^1.0.4
+#  flutter_tindercard: ^0.1.9
   modal_bottom_sheet: ^0.2.0
-  persistent_bottom_nav_bar: ^2.0.5
   polygon_clipper: ^1.0.2
+  persistent_bottom_nav_bar: ^2.0.5
 
   # Screen Utils
   flutter_screenutil: ^1.0.2
   cupertino_icons: ^0.1.3
+
+  # ETC
+  email_validator: ^1.0.4
 
 dev_dependencies:
   flutter_test:

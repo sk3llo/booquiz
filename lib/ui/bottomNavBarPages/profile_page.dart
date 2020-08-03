@@ -1,6 +1,7 @@
 import 'package:booquiz/blocs/blocs.dart';
 import 'package:booquiz/tools/defs.dart';
 import 'package:booquiz/tools/globals.dart';
+import 'package:booquiz/ui/custom_widgets/custom_loading_indicator.dart';
 import 'package:booquiz/ui/custom_widgets/custom_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:booquiz/tools/globals.dart';
@@ -12,7 +13,7 @@ class ProfilePage extends StatefulWidget {
   _ProfilePageState createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClientMixin {
 
   bool editModeOn = false;
   TextEditingController aboutMeController = TextEditingController();
@@ -56,10 +57,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   alignment: Alignment.centerRight,
                   height: dimensions.dim40(),
                   width: dimensions.dim40(),
-                  child: CircularProgressIndicator(
-                    backgroundColor: Colors.orangeAccent.shade400.withOpacity(.5),
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
+                  child: CustomLoadingIndicator(),
                 ) :
                 IconButton(
                   padding: EdgeInsets.zero,
@@ -319,4 +317,7 @@ class _ProfilePageState extends State<ProfilePage> {
       },
     );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }
