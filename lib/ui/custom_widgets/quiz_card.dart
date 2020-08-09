@@ -18,8 +18,8 @@ class QuizSwipeCard extends StatefulWidget {
   bool _allowVerticalMovement;
   CardSwipeCompleteCallback swipeCompleteCallback;
   CardDragUpdateCallback swipeUpdateCallback;
-  VoidCallback onLikedPressed;
-  VoidCallback onDislikedPressed;
+  Widget likeButton;
+  Widget dislikeButton;
   /// Send drag end callback right away
   Function onDragEnd;
   CardController cardController;
@@ -56,8 +56,8 @@ class QuizSwipeCard extends StatefulWidget {
         this.swipeCompleteCallback,
         this.swipeUpdateCallback,
         this.onDragEnd,
-        this.onLikedPressed,
-        this.onDislikedPressed
+        this.likeButton,
+        this.dislikeButton
       })
       : this._cardBuilder = cardBuilder,
         this._totalNum = totalNum,
@@ -85,8 +85,13 @@ class QuizSwipeCard extends StatefulWidget {
 
     for (int i = 0; i < _stackNum; i++) {
 //      _cardSizes.add((Size(0,0)));
+    if (i == 0) {
       _cardSizes.add(Size(minWidth + (widthGap / _stackNum) * i,
           minHeight + (heightGap / _stackNum) * i));
+    } else {
+      _cardSizes.add(Size(minWidth + (widthGap / _stackNum) * i,
+          minHeight + (heightGap / _stackNum) * i));
+    }
 
       switch (orientation) {
         case AmassOrientation.BOTTOM:
@@ -156,46 +161,14 @@ class _QuizSwipeCardState extends State<QuizSwipeCard>
                   Positioned(
                     right: 0,
                     top: 0,
-                    child: FloatingActionButton(
-                      shape: CircleBorder(
-                        side: BorderSide(
-                          color: Colors.white54,
-                          width: 2
-                        )
-                      ),
-                      backgroundColor: Colors.deepOrange[100],
-                      onPressed: widget.onLikedPressed,
-                      highlightElevation: 0,
-                      focusElevation: 0,
-                      elevation: 0,
-                      heroTag: 'zhzhzh',
-                      child: Icon(
-                          Icons.thumb_up
-                      ),
-                    ),
+                    child: widget.likeButton,
                   ),
 
                   // Dislike
                   Positioned(
                     left: 0,
                     top: 0,
-                    child: FloatingActionButton(
-                      shape: CircleBorder(
-                          side: BorderSide(
-                              color: Colors.white54,
-                            width: 2
-                          )
-                      ),
-                      backgroundColor: Colors.deepOrange[100],
-                      onPressed: widget.onDislikedPressed,
-                      highlightElevation: 0,
-                      focusElevation: 0,
-                      elevation: 0,
-                      heroTag: 'hzhzhz',
-                      child: Icon(
-                        Icons.thumb_down
-                      ),
-                    ),
+                    child: widget.dislikeButton,
                   ),
                 ],
               ),

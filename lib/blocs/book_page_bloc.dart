@@ -43,12 +43,12 @@ class BookPageLoadingState extends BookPageStates {
 }
 
 class BookPageLoadedState extends BookPageStates {
-  final Book updatedBook;
+  final Book updatedUserBook;
 
-  BookPageLoadedState(this.updatedBook);
+  BookPageLoadedState(this.updatedUserBook);
 
   @override
-  List<Object> get props => [updatedBook];
+  List<Object> get props => [updatedUserBook];
 }
 
 class BookPageErrorState extends BookPageStates {

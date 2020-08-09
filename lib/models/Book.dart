@@ -25,6 +25,7 @@ class Book {
 
   // Fields for user's book
   bool completed;
+  int timesCompleted;
   DocumentReference lastCompletedQuestion;
   Timestamp lastOpened;
   int questionsCompleted;
@@ -52,7 +53,8 @@ class Book {
       this.questionsCompleted,
       this.questionsInProgress,
       this.ref,
-      this.dislikes
+      this.dislikes,
+        this.timesCompleted
       });
 
   Book.fromSnap(DocumentSnapshot snap)
@@ -78,6 +80,7 @@ class Book {
         ref: snap.data['ref'],
         likes: snap.data['likes'] ?? 0,
         dislikes: snap.data['dislikes'] ?? 0,
-        quiz: []
+        quiz: [],
+        timesCompleted: snap.data['timesCompleted']
     );
 }

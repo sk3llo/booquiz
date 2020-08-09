@@ -164,7 +164,7 @@ class FirestoreUtils {
               .document(bookId)
               .collection('QUESTIONS')
               .orderBy('createdAt', descending: true)
-              .startAtDocument(lastCompletedQuestionSnap)
+              .startAfterDocument(lastCompletedQuestionSnap)
               .limit(limit)
               .getDocuments();
 
@@ -176,6 +176,7 @@ class FirestoreUtils {
 
           bookDebug('firestore_utils.dart', 'getNotCompletedQuestions', 'INFO',
               'Loaded ${questionList.length} NOT completed questions.');
+
         } else {
           // If doesn't exists then get all questions
           QuerySnapshot allNotCompletedQuestions = await booksRef

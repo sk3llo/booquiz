@@ -81,9 +81,9 @@ class _BookPageState extends State<BookPage> with TickerProviderStateMixin {
                       : state is BookPageLoadingState
                           ? ''
                           : state is BookPageLoadedState
-                              ? state.updatedBook.questionsLength == 1
-                                  ? state.updatedBook.questionsLength.toString() + ' question'
-                                  : state.updatedBook.questionsLength.toString() + ' questions'
+                              ? state.updatedUserBook?.questionsLength == 1
+                                  ? state.updatedUserBook?.questionsLength.toString() + ' question'
+                                  : state.updatedUserBook?.questionsLength.toString() + ' questions'
                               : questions.length == 1
                                   ? '${questions.length} question'
                                   : '${questions.length} questions'),
@@ -261,14 +261,14 @@ class _BookPageState extends State<BookPage> with TickerProviderStateMixin {
                     child: MaterialButton(
                       elevation: 0,
                       height: dimensions.dim40(),
-                      color: Colors.orange.shade400,
+                      color: state is BookPageLoadedState ? Colors.orange.shade400 : Colors.blueGrey[400],
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.all(Radius.circular(mainPadding)),
                           side: BorderSide(color: Colors.white, width: 2)),
                       onPressed: () {
                         if (state is BookPageLoadedState) {
                           Navigator.of(context).push(
-                              MaterialPageRoute(builder: (context) => QuizPage(state.updatedBook)));
+                              MaterialPageRoute(builder: (context) => QuizPage(state.updatedUserBook)));
                         }
                       },
                       child: Text(

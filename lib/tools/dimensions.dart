@@ -23,6 +23,22 @@ class Dimensions {
     return mSize.setHeight(1000);
   }
 
+  double dim480 (){
+    return mSize.setHeight(940);
+  }
+
+  double dim460 (){
+    return mSize.setHeight(920);
+  }
+
+  double dim440 (){
+    return mSize.setHeight(880);
+  }
+
+  double dim420 (){
+    return mSize.setHeight(840);
+  }
+
   double dim400 (){
     return mSize.setHeight(800);
   }

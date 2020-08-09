@@ -1,5 +1,6 @@
 import 'package:booquiz/models/Book.dart';
 import 'package:booquiz/models/Question.dart';
+import 'package:booquiz/tools/globals.dart';
 import 'package:flutter/material.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/widgets.dart';
@@ -14,16 +15,25 @@ abstract class QuizPageEvents extends Equatable {
 }
 
 class QuizPageLoadQuestionsEvent extends QuizPageEvents {
-  final List<Question> mList;
   final Book book;
   final int limit;
 
-  QuizPageLoadQuestionsEvent(this.mList, this.book, this.limit);
+  QuizPageLoadQuestionsEvent(this.book, this.limit);
 
   @override
-  List<Object> get props => [mList, book, limit];
+  List<Object> get props => [book, limit];
 }
 
+class QuizPageCompleteQuestionEvent extends QuizPageEvents {
+  final Book book;
+  final Question question;
+  final int timeTaken;
+
+  QuizPageCompleteQuestionEvent(this.book, this.question, this.timeTaken);
+
+  @override
+  List<Object> get props => [book, question, timeTaken];
+}
 
 /// STATES
 
@@ -33,56 +43,133 @@ abstract class QuizPageStates extends Equatable {
 }
 
 class QuizPageEmptyState extends QuizPageStates {
-
   @override
   List<Object> get props => [];
-
 }
 
 class QuizPageLoadingState extends QuizPageStates {
-
   @override
   List<Object> get props => [];
 
   @override
   bool get stringify => true;
-
 }
 
 class QuizPageLoadedState extends QuizPageStates {
+  final Book book;
+
+  QuizPageLoadedState(this.book);
 
   @override
-  List<Object> get props => [];
+  List<Object> get props => [book];
 
   @override
   bool get stringify => true;
-
 }
 
 class QuizPageErrorState extends QuizPageStates {
-
   @override
   List<Object> get props => [];
 
   @override
   bool get stringify => true;
-
 }
 
 /// BLOC
 
-class QuizPageBloc extends Bloc<QuizPageEvents, QuizPageStates>{
-  QuizPageBloc(): super(QuizPageEmptyState());
+class QuizPageBloc extends Bloc<QuizPageEvents, QuizPageStates> {
+  QuizPageBloc() : super(QuizPageEmptyState());
 
   @override
   Stream<QuizPageStates> mapEventToState(QuizPageEvents event) async* {
+    if (event is QuizPageLoadQuestionsEvent) {
+      try {
+        yield QuizPageLoadingState();
 
-    if (event is QuizPageLoadQuestionsEvent){
+        List<Question> _listOfAllQuiz = [];
 
-      // Last not completed question is always loaded on BOOK page so skip it
+        // Get not completed questions
+        _listOfAllQuiz = await fUtils
+            .getNotCompletedQuestions(event.book.id, optionalLoadedUserBook: event.book, limit: event.limit);
 
+
+        if (_listOfAllQuiz.isNotEmpty) {
+
+          // Check for the last not completed question to remove it
+          _listOfAllQuiz.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+
+          List<Question> _listToAppend = [];
+          _listOfAllQuiz.forEach((_newQ) {
+            event.book.quiz.forEach((_oldQ) {
+              if (_oldQ.question != _newQ.question && _oldQ.createdAt != _newQ.createdAt){
+                _listToAppend.add(_newQ);
+              }
+            });
+          });
+
+          event.book.quiz.addAll(_listToAppend);
+          event.book.quiz.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+
+          bookDebug(
+              'quiz_page_bloc.dart', 'event is QuizPageLoadQuestionsEvent', 'INFO', 'Loaded ${event.book.quiz.length} questions ');
+
+          yield QuizPageLoadedState(event.book);
+        } else {
+          yield QuizPageEmptyState();
+        }
+      } catch (e) {
+        bookDebug(
+            'quiz_page_bloc.dart', 'event is QuizPageLoadQuestionsEvent', 'ERROR', e.toString());
+      }
     }
 
-  }
 
+    if (event is QuizPageCompleteQuestionEvent){
+
+      try {
+        yield QuizPageLoadingState();
+        event.question.timeTaken = event.timeTaken;
+        event.book.questionsCompleted += 1;
+        event.book.questionsInProgress -= 1;
+
+
+        // Update user's book ('questionsCompleted', 'completed');
+        await currentUser.snap.reference.collection('BOOKS').document(event.book.id).setData({
+          'questionsCompleted': event.book.questionsCompleted,
+          'lastCompletedQuestion': event.question.snap.reference,
+          'completed': event.book.questionsCompleted == event.book.questionsLength
+        }, merge: true);
+
+        // Add new completed question under user book's 'COMPLETED_QUIZ';
+        await currentUser.snap.reference.collection('BOOKS').document(event.book.id).collection('COMPLETED_QUIZ').add({
+          'answered': event.question.answered,
+          'answers': event.question.answers,
+          'author': event.question.author,
+          'completedAt': event.question.completedAt,
+          'correctAnswer': event.question.correctAnswer,
+          'question': event.question.question,
+          'questionSearch': event.question.questionSearch,
+          'timeTaken': event.question.timeTaken,
+          'timesCompleted': event.question.timesCompleted,
+        });
+
+        // Update main book ('timesCompleted');
+        if (event.book.questionsCompleted == event.book.questionsLength){
+          event.book.timesCompleted += 1;
+          await event.book.ref.updateData({
+            'timesCompleted': event.book.timesCompleted
+          });
+        }
+
+        
+        yield QuizPageLoadedState(event.book);
+
+
+      } catch (e) {
+        bookDebug(
+            'quiz_page_bloc.dart', 'event is QuizPageCompleteQuestionEvent', 'ERROR', e.toString());
+      }
+
+    }
+  }
 }
