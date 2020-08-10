@@ -16,6 +16,7 @@ class QuizSwipeCard extends StatefulWidget {
   bool _swipeUp;
   bool _swipeDown;
   bool _allowVerticalMovement;
+  bool _allowHorizontalMovement;
   CardSwipeCompleteCallback swipeCompleteCallback;
   CardDragUpdateCallback swipeUpdateCallback;
   Widget likeButton;
@@ -52,6 +53,7 @@ class QuizSwipeCard extends StatefulWidget {
         double minWidth,
         double minHeight,
         bool allowVerticalMovement = true,
+        bool allowHorizontalMovement = true,
         this.cardController,
         this.swipeCompleteCallback,
         this.swipeUpdateCallback,
@@ -72,6 +74,7 @@ class QuizSwipeCard extends StatefulWidget {
         this._swipeDown = swipeDown,
         assert(maxWidth > minWidth && maxHeight > minHeight),
         this._allowVerticalMovement = allowVerticalMovement,
+        this._allowHorizontalMovement = allowHorizontalMovement,
         this._maxWidth = maxWidth,
         this._minWidth = minWidth,
         this._maxHeight = maxHeight,
@@ -207,7 +210,7 @@ class _QuizSwipeCardState extends State<QuizSwipeCard>
           child: GestureDetector(
             onPanUpdate: (DragUpdateDetails details) {
               setState(() {
-                if (widget._allowVerticalMovement == true) {
+                if (widget._allowVerticalMovement) {
                   frontCardAlign = Alignment(
                       frontCardAlign.x +
                           details.delta.dx * 20 / MediaQuery.of(context).size.width,
@@ -215,7 +218,7 @@ class _QuizSwipeCardState extends State<QuizSwipeCard>
                           details.delta.dy *
                               30 /
                               MediaQuery.of(context).size.height);
-                } else {
+                } else if (widget._allowHorizontalMovement) {
                   frontCardAlign = Alignment(
                       frontCardAlign.x +
                           details.delta.dx * 10 / MediaQuery.of(context).size.width,
