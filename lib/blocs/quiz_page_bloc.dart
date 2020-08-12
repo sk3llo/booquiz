@@ -1,6 +1,7 @@
 import 'package:booquiz/models/Book.dart';
 import 'package:booquiz/models/Question.dart';
 import 'package:booquiz/tools/globals.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/widgets.dart';
@@ -137,7 +138,32 @@ class QuizPageBloc extends Bloc<QuizPageEvents, QuizPageStates> {
         await currentUser.snap.reference.collection('BOOKS').document(event.book.id).setData({
           'questionsCompleted': event.book.questionsCompleted,
           'lastCompletedQuestion': event.question.snap.reference,
-          'completed': event.book.questionsCompleted == event.book.questionsLength
+          'completed': event.book.questionsCompleted == event.book.questionsLength,
+          'totalTimeTake': event.timeTaken
+        }, merge: true);
+
+        // Check if user already completed the same questions and if so update [timesCompleted]
+        if (event.book.timesCompleted == null || event.book.timesCompleted != null && event.book.timesCompleted <= 0){
+          await event.book.ref.collection('COMPLETED_BY').document(currentUser.snap.documentID).setData({
+            'timeTaken': event.timeTaken,
+            'timesCompleted': 1,
+            'userRef': currentUser.snap.reference,
+            'when': Timestamp.now()
+          }, merge: true);
+        } else {
+          await event.book.ref.collection('COMPLETED_BY').document(currentUser.snap.documentID).setData({
+            'timeTaken': event.timeTaken,
+            'timesCompleted': event.book.timesCompleted + 1,
+            'when': Timestamp.now()
+          }, merge: true);
+        }
+
+        // Add new completed question under book's 'COMPLETED_QUIZ';
+        await currentUser.snap.reference.collection('BOOKS').document(event.book.id).setData({
+          'questionsCompleted': event.book.questionsCompleted,
+          'lastCompletedQuestion': event.question.snap.reference,
+          'completed': event.book.questionsCompleted == event.book.questionsLength,
+          'totalTimeTake': event.timeTaken
         }, merge: true);
 
         // Add new completed question under user book's 'COMPLETED_QUIZ';
@@ -153,17 +179,26 @@ class QuizPageBloc extends Bloc<QuizPageEvents, QuizPageStates> {
           'timesCompleted': event.question.timesCompleted,
         });
 
-        // Update main book ('timesCompleted');
+        // When completed all questions
         if (event.book.questionsCompleted == event.book.questionsLength){
+          event.book.timesCompleted ??= 0;
           event.book.timesCompleted += 1;
-          await event.book.ref.updateData({
-            'timesCompleted': event.book.timesCompleted
-          });
-        }
+          event.book.totalTimeTaken = event.timeTaken;
 
+          // Update user's book doc
+          await currentUser.snap.reference.collection('BOOKS').document(event.book.id).updateData({
+            'timesCompleted': event.book.timesCompleted,
+            'totalTimeTaken': event.timeTaken
+          });
+
+          // Update main book doc
+          await event.book.ref.setData({
+            'timesCompleted': event.book.timesCompleted,
+            'totalTimeTaken': event.timeTaken
+          }, merge: true);
+        }
         
         yield QuizPageLoadedState(event.book);
-
 
       } catch (e) {
         bookDebug(

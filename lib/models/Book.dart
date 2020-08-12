@@ -20,6 +20,7 @@ class Book {
   int dislikes = 0;
   double rating;
   int questionsLength = 0;
+  int totalTimeTaken = 0;
   List<Question> quiz; // Questions and answers
   Timestamp updatedAt;
 
@@ -47,6 +48,7 @@ class Book {
       this.quiz,
       this.updatedAt,
       this.questionsLength,
+      this.totalTimeTaken,
       this.completed,
       this.lastCompletedQuestion,
       this.lastOpened,
@@ -74,9 +76,10 @@ class Book {
         completed: snap.data['completed'],
         lastCompletedQuestion: snap.data['lastCompletedQuestion'],
         lastOpened: snap.data['lastOpened'],
-        questionsCompleted: snap.data['questionsCompleted'],
+        questionsCompleted: snap.data['questionsCompleted'] ?? 0,
         questionsInProgress: snap?.data['questionsLength'] ?? 0 - snap?.data['questionsCompleted'] ?? 0,
         questionsLength: snap.data['questionsLength'] ?? 0,
+        totalTimeTaken: snap.data['totalTimeTaken'] ?? 0,
         ref: snap.data['ref'],
         likes: snap.data['likes'] ?? 0,
         dislikes: snap.data['dislikes'] ?? 0,

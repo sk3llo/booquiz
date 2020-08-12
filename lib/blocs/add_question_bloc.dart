@@ -102,6 +102,7 @@ class AddQuestionBloc extends Bloc<AddQuestionEvents, AddQuestionStates> {
             'title': event.book.title,
             'subtitle': event.book.subtitle,
             'questionsLength': 0,
+            'timesCompleted': 0,
             'updatedAt': _timestampNow,
             'imageUrl': event.book.imageUrl,
             'description': event.book.description,
