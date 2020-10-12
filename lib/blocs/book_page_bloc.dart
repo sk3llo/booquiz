@@ -43,12 +43,13 @@ class BookPageLoadingState extends BookPageStates {
 }
 
 class BookPageLoadedState extends BookPageStates {
-  final Book updatedUserBook;
+  final Book mainBook;
+  final Book userBook;
 
-  BookPageLoadedState(this.updatedUserBook);
+  BookPageLoadedState(this.mainBook, this.userBook);
 
   @override
-  List<Object> get props => [updatedUserBook];
+  List<Object> get props => [mainBook, userBook];
 }
 
 class BookPageErrorState extends BookPageStates {
@@ -67,7 +68,6 @@ class BookPageBloc extends Bloc<BookPageEvents, BookPageStates> {
       try {
         yield BookPageLoadingState();
 
-        Book bookToReturn; // The one to return;
         Book userBook; // Book under (USERS/$id/BOOKS/);
         Book mainBook; // Book under (BOOKS/$id);
 
@@ -86,27 +86,50 @@ class BookPageBloc extends Bloc<BookPageEvents, BookPageStates> {
 
           // Now get answers for the last not completed question if exists
           List<Question> lastNotCompletedQuestion = await fUtils
-              .getNotCompletedQuestions(userBook.id, optionalLoadedUserBook: userBook, limit: 1);
+              .getNotCompletedQuestions(mainBook.id, optionalLoadedUserBook: userBook, limit: 1);
 
-          userBook.quiz.addAll(lastNotCompletedQuestion);
-          userBook.quiz.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+          mainBook.quiz.addAll(lastNotCompletedQuestion);
 
-          bookToReturn = userBook;
-          yield BookPageLoadedState(bookToReturn);
+          bookDebug('book_page_bloc.dart', 'event is BookPageLoadDetailsEvent', 'INFO',
+              'Loaded ${mainBook.quiz.length} questions.');
+
+          yield BookPageLoadedState(mainBook, userBook);
         } else if (_mainBookSnap.exists && _mainBookSnap.data != null) {
           mainBook = Book.fromSnap(_mainBookSnap);
-          bookToReturn = mainBook;
-          bookDebug('book_page_bloc.dart', 'event is BookPageCheckQuestionsEvent', 'INFO',
-              'Loaded ${bookToReturn.questionsLength} questions.');
-          yield BookPageLoadedState(bookToReturn);
+
+          // Update user's book;
+          await currentUser.snap.reference.collection('BOOKS').document(event.book.id).setData({
+            'authors': mainBook.authors,
+            'id': mainBook.id,
+            'title': mainBook.title,
+            'subtitle': mainBook.subtitle,
+            'questionsLength': mainBook.questionsLength,
+            'timesCompleted': 0,
+            'updatedAt': Timestamp.now(),
+            'imageUrl': mainBook.imageUrl,
+            'description': mainBook.description,
+            'rating': mainBook.rating,
+            'categories': mainBook.categories,
+            'ref': mainBook.snap.reference,
+            'totalTimeTaken': 0,
+            'questionsCompleted': 0,
+            'completed': mainBook.questionsCompleted == mainBook.questionsLength,
+          }, merge: true);
+
+          _userBookSnap = await currentUser.snap.reference.collection('BOOKS').document(event.book.id).get();
+          userBook = Book.fromSnap(_userBookSnap);
+
+          bookDebug('book_page_bloc.dart', 'event is BookPageLoadDetailsEvent', 'INFO',
+              'Loaded ${mainBook.questionsLength} questions.');
+          yield BookPageLoadedState(userBook, mainBook);
         } else {
           bookDebug(
-              'book_page_bloc.dart', 'event is BookPageCheckQuestionsEvent', 'INFO', 'Book is not in db yet');
+              'book_page_bloc.dart', 'event is BookPageLoadDetailsEvent', 'INFO', 'Book is not in Firebase and has no questions yet');
           yield BookPageEmptyState();
         }
       } catch (e) {
         bookDebug(
-            'book_page_bloc.dart', 'event is BookPageCheckQuestionsEvent', 'ERROR', e.toString());
+            'book_page_bloc.dart', 'event is BookPageLoadDetailsEvent', 'ERROR', e.toString());
       }
     }
   }

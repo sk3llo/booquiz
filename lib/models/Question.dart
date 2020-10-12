@@ -30,7 +30,7 @@ class Question {
     this.answered = snap.data['answered'];
     this.timeTaken = snap.data['timeTaken'];
     this.completedAt = snap.data['completedAt'];
-    this.timesCompleted = snap.data['timesCompleted'];
+    this.timesCompleted = snap.data['timesCompleted'] ?? 0;
   }
 }
 

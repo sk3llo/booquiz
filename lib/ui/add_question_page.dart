@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:booquiz/blocs/add_question_bloc.dart';
@@ -22,6 +23,9 @@ class AddQuestionPage extends StatefulWidget {
 }
 
 class _AddQuestionPageState extends State<AddQuestionPage> {
+
+  StreamSubscription<AddQuestionStates> newQuestionListener;
+
   TextEditingController _questionController = TextEditingController();
 
   TextEditingController _answer1Controller = TextEditingController();
@@ -37,17 +41,13 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
   @override
   void initState() {
     super.initState();
+  }
 
-    addQuestionBloc.listen((state) {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
 
-      if (state is AddQuestionLoadedState){
-//        WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-          Navigator.of(context).pop(state.question);
-//        });
-      }
-
-    });
-
+    listenToNewQuestion(context);
   }
 
   @override
@@ -67,7 +67,8 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                 child: BackButton(
                   color: Colors.white,
                   onPressed: () {
-                    Navigator.pop(context);
+                    if (state is AddQuestionLoadedState || state is AddQuestionEmptyState)
+                      Navigator.pop(context);
                   },
                 ),
               ),
@@ -1021,11 +1022,27 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
 
   @override
   void dispose() {
+    addQuestionBloc.close();
+    newQuestionListener.cancel();
     _questionController?.dispose();
     _answer1Controller?.dispose();
     _answer2Controller?.dispose();
     _answer3Controller?.dispose();
     _answer4Controller?.dispose();
     super.dispose();
+  }
+
+  Future listenToNewQuestion(BuildContext _context) async {
+
+    newQuestionListener = addQuestionBloc.listen((state) {
+
+      if (state is AddQuestionLoadedState){
+        // WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+        Navigator.of(_context).pop(state.question);
+        // });
+      }
+
+    });
+
   }
 }

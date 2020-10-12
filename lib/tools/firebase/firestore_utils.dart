@@ -153,18 +153,19 @@ class FirestoreUtils {
     try {
       // First get last completed question from user's `BOOKS` collection
       Book _userBook = optionalLoadedUserBook ?? Book.fromSnap(await currentUser.snap.reference.collection('BOOKS').document(bookId).get());
-      
+
       // Now check if exists
-      if (_userBook != null) {
+      if (_userBook != null && _userBook.lastCompletedQuestion != null) {
         // Check if last completed question exists
         if (_userBook.lastCompletedQuestion.path.isNotEmpty) {
           DocumentSnapshot lastCompletedQuestionSnap = await _userBook.lastCompletedQuestion.get();
           // Get all not completed questions based on last question
+
           QuerySnapshot allNotCompletedQuestions = await booksRef
               .document(bookId)
               .collection('QUESTIONS')
-              .orderBy('createdAt', descending: true)
               .startAfterDocument(lastCompletedQuestionSnap)
+              .orderBy('createdAt')
               .limit(limit)
               .getDocuments();
 
@@ -182,7 +183,7 @@ class FirestoreUtils {
           QuerySnapshot allNotCompletedQuestions = await booksRef
               .document(bookId)
               .collection('QUESTIONS')
-              .orderBy('createdAt', descending: true)
+              .orderBy('createdAt', descending: false)
               .limit(limit)
               .getDocuments();
 
@@ -192,7 +193,24 @@ class FirestoreUtils {
             });
           }
         }
+      } else {
+        // Create book under user's profile
+        QuerySnapshot allNotCompletedQuestions = await booksRef
+            .document(bookId)
+            .collection('QUESTIONS')
+            .orderBy('createdAt', descending: false)
+            .limit(limit)
+            .getDocuments();
+
+        if (allNotCompletedQuestions.documents.isNotEmpty) {
+          allNotCompletedQuestions.documents.forEach((_doc) {
+            questionList.add(Question.fromSnap(_doc));
+          });
+        }
+
       }
+
+      bookDebug('firestore_utils.dart', 'getNotCompletedQuestions', 'INFO', 'Loaded ${questionList.length} not completed questions.');
 
       return questionList;
     } catch (e) {

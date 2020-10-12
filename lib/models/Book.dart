@@ -32,6 +32,7 @@ class Book {
   int questionsCompleted;
   int questionsInProgress;
   DocumentReference ref;
+  Map<String, dynamic> data;
 
   Book(
       {@required this.snap,
@@ -56,34 +57,49 @@ class Book {
       this.questionsInProgress,
       this.ref,
       this.dislikes,
-        this.timesCompleted
-      });
+      this.timesCompleted,
+      this.data});
 
   Book.fromSnap(DocumentSnapshot snap)
-    : this(
-        snap: snap,
-        title: snap.data['title'],
-        imageUrl: snap.data['imageUrl'],
-        id: snap.data['id'],
-        authors: snap.data['authors'],
-        description: snap.data['description'],
-        rating: snap.data['rating'],
-        subtitle: snap.data['subtitle'],
-        starred: snap.data['starred'],
-        updatedAt: snap.data['updatedAt'],
-        categories: snap.data['categories'],
-        // List<String>
-        completed: snap.data['completed'],
-        lastCompletedQuestion: snap.data['lastCompletedQuestion'],
-        lastOpened: snap.data['lastOpened'],
-        questionsCompleted: snap.data['questionsCompleted'] ?? 0,
-        questionsInProgress: snap?.data['questionsLength'] ?? 0 - snap?.data['questionsCompleted'] ?? 0,
-        questionsLength: snap.data['questionsLength'] ?? 0,
-        totalTimeTaken: snap.data['totalTimeTaken'] ?? 0,
-        ref: snap.data['ref'],
-        likes: snap.data['likes'] ?? 0,
-        dislikes: snap.data['dislikes'] ?? 0,
-        quiz: [],
-        timesCompleted: snap.data['timesCompleted']
-    );
+      : this(
+            snap: snap,
+            title: snap.data['title'],
+            imageUrl: snap.data['imageUrl'],
+            id: snap.data['id'],
+            authors: snap.data['authors'],
+            description: snap.data['description'],
+            rating: snap.data['rating'],
+            subtitle: snap.data['subtitle'],
+            starred: snap.data['starred'],
+            updatedAt: snap.data['updatedAt'],
+            categories: snap.data['categories'],
+            // List<String>
+            lastCompletedQuestion: snap.data['lastCompletedQuestion'],
+            lastOpened: snap.data['lastOpened'],
+            questionsCompleted: snap.data['questionsCompleted'] ?? 0,
+            questionsInProgress:
+                snap?.data['questionsLength'] ?? 0 - snap?.data['questionsCompleted'] ?? 0,
+            questionsLength: snap.data['questionsLength'] ?? 0,
+            completed:
+            snap.data['completed'] != null ? snap.data['completed'] :
+                snap.data['questionsCompleted'] != null && snap.data['questionsLength'] != null
+                    ? snap.data['questionsCompleted'] != 0 &&
+                            snap.data['questionsLength'] != 0 &&
+                            snap.data['questionsCompleted'] == snap.data['questionsLength']
+                        ? true
+                        : false : false,
+            totalTimeTaken: snap.data['totalTimeTaken'] ?? 0,
+            ref: snap.data['ref'],
+            likes: snap.data['likes'] ?? 0,
+            dislikes: snap.data['dislikes'] ?? 0,
+            quiz: [],
+            timesCompleted: snap.data['timesCompleted'],
+            data: snap.data);
+
+  Book.createEmpty() {
+    this.quiz = [];
+    this.questionsInProgress = 0;
+    this.questionsLength = 0;
+    this.questionsCompleted = 0;
+  }
 }

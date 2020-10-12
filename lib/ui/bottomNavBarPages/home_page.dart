@@ -208,8 +208,8 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
 
                                           Positioned(
                                             bottom: 0.0,
-                                            left: dimensions.dim4(),
-                                            right: dimensions.dim4(),
+                                            left: 0,
+                                            right: 0,
                                             child: buildRaisedContainer(state),
                                           ),
 

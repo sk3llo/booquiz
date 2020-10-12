@@ -84,32 +84,32 @@ class _LoginStep1State extends State<LoginStep1> with TickerProviderStateMixin {
                     emailLogin(state),
 
                     // HUISASI
-//                    Positioned(
-//                      child: Container(
-//                        height: dimensions.dim60(),
-//                        width: dimensions.dim40(),
-//                        color: Colors.green,
-//                        child: RawMaterialButton(
-//                          onPressed: () async {
-//                            // Log Out
-//                           loginBloc.add(LogOutEvent());
-//
-//                            print(state);
-//
-//                            var gg = await dbHelper.checkLogin();
-//                            print(gg?.email);
-//                            print(gg?.provider);
-//                            print(gg?.passwordOrAccessToken);
-//                          },
-//                          child: Text(
-//                            'HUISASI',
-//                            style: TextStyle(color: Colors.black, fontSize: dimensions.sp18()),
-//                          ),
-//                        ),
-//                      ),
-//                      top: MediaQuery.of(context).size.width / 4,
-//                      width: 100,
-//                    ),
+                   // Positioned(
+                   //   child: Container(
+                   //     height: dimensions.dim60(),
+                   //     width: dimensions.dim40(),
+                   //     color: Colors.green,
+                   //     child: RawMaterialButton(
+                   //       onPressed: () async {
+                   //         // Log Out
+                   //        loginBloc.add(LogOutEvent());
+                   //
+                   //         print(state);
+                   //
+                   //         var gg = await dbHelper.checkLogin();
+                   //         print(gg?.email);
+                   //         print(gg?.provider);
+                   //         print(gg?.passwordOrAccessToken);
+                   //       },
+                   //       child: Text(
+                   //         'HUISASI',
+                   //         style: TextStyle(color: Colors.black, fontSize: dimensions.sp18()),
+                   //       ),
+                   //     ),
+                   //   ),
+                   //   top: MediaQuery.of(context).size.width / 4,
+                   //   width: 100,
+                   // ),
 
                   ],
                 );
@@ -538,150 +538,156 @@ class _LoginStep1State extends State<LoginStep1> with TickerProviderStateMixin {
   }
 
   Widget pickUsername(dynamic state) {
-    return Column(
-      mainAxisSize: MainAxisSize.max,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: <Widget>[
-        // Username field
-        AnimatedContainer(
-          alignment: Alignment.center,
-          duration: Duration(milliseconds: 300),
-          padding: EdgeInsets.only(
-              left: mainPadding,
-              right: mainPadding,
-              top: dimensions.dim2(),
-              bottom: dimensions.dim2()),
-          margin: EdgeInsets.only(
-              left: dimensions.dim24(), right: dimensions.dim24(), top: dimensions.dim50()),
-          height: state is NewUserCreatedState ? 0 : dimensions.buttonsHeight(),
-          decoration: ShapeDecoration(
-              color: Colors.transparent,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(dimensions.mainCornerRadius())),
-                  side: BorderSide(
-                      color: _usernameFocus.hasFocus || _usernameController.text.isNotEmpty
-                          ? Colors.white
-                          : Colors.grey))),
-          child: CustomTextField(
-            onTap: () {
-              setState(() {});
-            },
-            onChanged: (t) {
-              // Needed to display color change of login button
-              if (t.length <= 1) setState(() {});
-
-              // Check if username is valid
-              // (no whitespaces && more 6 chars)
-              if (!t.contains(RegExp(r'\s')) &&
-                  t.length >= usernameMinLength &&
-                  t.length <= usernameMaxLength
-                  // need at least 1 letter
-                  && t.contains(RegExp(r'[a-zA-Z]'))) {
-
-                  setState(() {
-                    usernameChecked = true;
-                  });
-              } else {
-                setState(() {
-                  usernameChecked = false;
-                });
-              }
-            },
-            onSubmitted: (_pass) {
-              loginBloc.add(EmailPassLogInEvent(
-                  email: _usernameController.text, password: _pass, onStart: false));
-            },
-            focusNode: _usernameFocus,
-            controller: _usernameController,
-            expands: false,
-            decoration: InputDecoration(
-              hintText: 'Pick a username',
-              hintStyle: TextStyle(fontSize: dimensions.sp14(), color: Colors.grey),
-              enabledBorder: InputBorder.none,
-              border: InputBorder.none,
-              focusedBorder: InputBorder.none,
-            ),
-            style: TextStyle(fontSize: dimensions.sp14(), color: loginTextColor, shadows: [
-              Shadow(color: Colors.teal, blurRadius: 1, offset: Offset.zero),
-              Shadow(color: Colors.white, blurRadius: 5, offset: Offset(0, 0)),
-            ]),
-            maxLength: 20,
-            textInputAction: TextInputAction.done,
-          ),
-        ),
-
-        // Let's go button
-        AnimatedContainer(
-          duration: Duration(milliseconds: 300),
-          height: state is NewUserCreatedState ? 0 : dimensions.buttonsHeight(),
-          margin: EdgeInsets.only(bottom: mainPadding, top: mainPadding),
-          width: state is NewUserCreatedState ? 0 : MediaQuery.of(context).size.width / 3,
-          decoration: ShapeDecoration(
-              color: usernameChecked ? Colors.white : Colors.grey[350],
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(mainPadding)),
-                  side: BorderSide(color: usernameChecked ? Colors.white : Colors.grey[350]))),
-          child: RawMaterialButton(
-            onPressed: () async {
-              // Verify username
-              var t = _usernameController.text; // Username text
-              // Check for whitespaces
-              if (t.toLowerCase().trim() == '') {
-              // Just fucking do nothing
-                return;
-              } else if (t.contains(' ') || t.contains(RegExp(r'\s'))) {
-                setState(() {
-                  usernameErrorText = "No whitespaces allowed.";
-                });
-                return;
-              } else if (!t.contains(RegExp(r'[a-zA-Z]'))) {
-                setState(() {
-                  usernameErrorText = "At least 1 letter required.";
-                });
-                return;
-              }
-              // Check duplicate
-              var exists = await fUtils.checkDuplicateUsername(t);
-              if (exists) {
-                setState(() {
-                  usernameErrorText = "Duplicate username.";
-                });
-                return;
-              }
-
-              _usernameController.text = '';
-              _usernameFocus.unfocus();
-
-                loginBloc.add(CreateNewUser(
-                    firebaseUser, currentUser.loginMethod?.first ?? [], t.toLowerCase().trim(), currentUser.password));
-            },
-            child: Text(
-              state is NewUserCreatedState ? '' : "Let's go!",
-              style: TextStyle(
-                  color: usernameChecked ? Colors.green : Colors.white,
-                  fontSize: dimensions.sp14()
-              ),
-            ),
-          ),
-        ),
-
-        // Error text
-        AnimatedContainer(
-          duration: Duration(milliseconds: 300),
-            height: state is NewUserCreatedState ? 0 : dimensions.dim35(),
+    return WillPopScope(
+      onWillPop: () async {
+        _pageViewController.jumpTo(0);
+        return false;
+      },
+      child: Column(
+        mainAxisSize: MainAxisSize.max,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          // Username field
+          AnimatedContainer(
             alignment: Alignment.center,
-            width: state is NewUserCreatedState ? 0 : MediaQuery.of(context).size.width,
-            padding: EdgeInsets.symmetric(vertical: dimensions.dim4()),
-            child: Text(
-              usernameErrorText,
-              style: TextStyle(
-                  color: colorBlueDarkText,
-                fontSize: dimensions.sp14()
-              ),
-            )),
+            duration: Duration(milliseconds: 300),
+            padding: EdgeInsets.only(
+                left: mainPadding,
+                right: mainPadding,
+                top: dimensions.dim2(),
+                bottom: dimensions.dim2()),
+            margin: EdgeInsets.only(
+                left: dimensions.dim24(), right: dimensions.dim24(), top: dimensions.dim50()),
+            height: state is NewUserCreatedState ? 0 : dimensions.buttonsHeight(),
+            decoration: ShapeDecoration(
+                color: Colors.transparent,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(dimensions.mainCornerRadius())),
+                    side: BorderSide(
+                        color: _usernameFocus.hasFocus || _usernameController.text.isNotEmpty
+                            ? Colors.white
+                            : Colors.grey))),
+            child: CustomTextField(
+              onTap: () {
+                setState(() {});
+              },
+              onChanged: (t) {
+                // Needed to display color change of login button
+                if (t.length <= 1) setState(() {});
 
-        successNewUser(state)
-      ],
+                // Check if username is valid
+                // (no whitespaces && more 6 chars)
+                if (!t.contains(RegExp(r'\s')) &&
+                    t.length >= usernameMinLength &&
+                    t.length <= usernameMaxLength
+                    // need at least 1 letter
+                    && t.contains(RegExp(r'[a-zA-Z]'))) {
+
+                    setState(() {
+                      usernameChecked = true;
+                    });
+                } else {
+                  setState(() {
+                    usernameChecked = false;
+                  });
+                }
+              },
+              onSubmitted: (_pass) {
+                loginBloc.add(EmailPassLogInEvent(
+                    email: _usernameController.text, password: _pass, onStart: false));
+              },
+              focusNode: _usernameFocus,
+              controller: _usernameController,
+              expands: false,
+              decoration: InputDecoration(
+                hintText: 'Pick a username',
+                hintStyle: TextStyle(fontSize: dimensions.sp14(), color: Colors.grey),
+                enabledBorder: InputBorder.none,
+                border: InputBorder.none,
+                focusedBorder: InputBorder.none,
+              ),
+              style: TextStyle(fontSize: dimensions.sp14(), color: loginTextColor, shadows: [
+                Shadow(color: Colors.teal, blurRadius: 1, offset: Offset.zero),
+                Shadow(color: Colors.white, blurRadius: 5, offset: Offset(0, 0)),
+              ]),
+              maxLength: 20,
+              textInputAction: TextInputAction.done,
+            ),
+          ),
+
+          // Let's go button
+          AnimatedContainer(
+            duration: Duration(milliseconds: 300),
+            height: state is NewUserCreatedState ? 0 : dimensions.buttonsHeight(),
+            margin: EdgeInsets.only(bottom: mainPadding, top: mainPadding),
+            width: state is NewUserCreatedState ? 0 : MediaQuery.of(context).size.width / 3,
+            decoration: ShapeDecoration(
+                color: usernameChecked ? Colors.white : Colors.grey[350],
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(mainPadding)),
+                    side: BorderSide(color: usernameChecked ? Colors.white : Colors.grey[350]))),
+            child: RawMaterialButton(
+              onPressed: () async {
+                // Verify username
+                var t = _usernameController.text; // Username text
+                // Check for whitespaces
+                if (t.toLowerCase().trim() == '') {
+                // Just fucking do nothing
+                  return;
+                } else if (t.contains(' ') || t.contains(RegExp(r'\s'))) {
+                  setState(() {
+                    usernameErrorText = "No whitespaces allowed.";
+                  });
+                  return;
+                } else if (!t.contains(RegExp(r'[a-zA-Z]'))) {
+                  setState(() {
+                    usernameErrorText = "At least 1 letter required.";
+                  });
+                  return;
+                }
+                // Check duplicate
+                var exists = await fUtils.checkDuplicateUsername(t);
+                if (exists) {
+                  setState(() {
+                    usernameErrorText = "Duplicate username.";
+                  });
+                  return;
+                }
+
+                _usernameController.text = '';
+                _usernameFocus.unfocus();
+
+                  loginBloc.add(CreateNewUser(
+                      firebaseUser, currentUser.loginMethod?.first ?? [], t.toLowerCase().trim(), currentUser.password));
+              },
+              child: Text(
+                state is NewUserCreatedState ? '' : "Let's go!",
+                style: TextStyle(
+                    color: usernameChecked ? Colors.green : Colors.white,
+                    fontSize: dimensions.sp14()
+                ),
+              ),
+            ),
+          ),
+
+          // Error text
+          AnimatedContainer(
+            duration: Duration(milliseconds: 300),
+              height: state is NewUserCreatedState ? 0 : dimensions.dim35(),
+              alignment: Alignment.center,
+              width: state is NewUserCreatedState ? 0 : MediaQuery.of(context).size.width,
+              padding: EdgeInsets.symmetric(vertical: dimensions.dim4()),
+              child: Text(
+                usernameErrorText,
+                style: TextStyle(
+                    color: colorBlueDarkText,
+                  fontSize: dimensions.sp14()
+                ),
+              )),
+
+          successNewUser(state)
+        ],
+      ),
     );
   }
 

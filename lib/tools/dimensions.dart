@@ -91,12 +91,28 @@ class Dimensions {
     return mSize.setHeight(670);
   }
 
+  double dim325 (){
+    return mSize.setHeight(650);
+  }
+
   double dim320 (){
     return mSize.setHeight(640);
   }
 
+  double dim315 (){
+    return mSize.setHeight(630);
+  }
+
   double dim300 (){
     return mSize.setHeight(600);
+  }
+
+  double dim290 (){
+    return mSize.setHeight(580);
+  }
+
+  double dim280 (){
+    return mSize.setHeight(560);
   }
 
   double dim275 (){
@@ -324,6 +340,26 @@ class Dimensions {
 
   double dim120 (){
     return mSize.setHeight(240);
+  }
+
+  double dim115 (){
+    return mSize.setHeight(230);
+  }
+
+  double dim114 (){
+    return mSize.setHeight(228);
+  }
+
+  double dim113 (){
+    return mSize.setHeight(226);
+  }
+
+  double dim112 (){
+    return mSize.setHeight(224);
+  }
+
+  double dim111 (){
+    return mSize.setHeight(222);
   }
 
   double dim110 (){

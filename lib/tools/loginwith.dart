@@ -315,6 +315,11 @@ Future<FirebaseUser> loginWithFacebook({String email, String accessToken}) async
     }
     return _signedIn;
   } catch (e) {
+
+    if (e is PlatformException && e.code == 'ERROR_INVALID_CREDENTIAL') {
+      loginBloc.add(LogOutEvent());
+    }
+
     bookDebug('loginwith.dart', 'loginWithFacebook', 'ERROR', '$e');
     return null;
   }

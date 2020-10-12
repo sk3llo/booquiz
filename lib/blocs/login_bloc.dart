@@ -318,6 +318,11 @@ class LoginBloc extends Bloc<LoginEvents, LoginStates> {
               );
               yield LoggedInState(currentUser, fbProvider, true);
               return;
+            } else if (!currentUser.loginMethod.contains(fbProvider)){
+              currentUser.loginMethod.add(fbProvider);
+              await currentUser.snap.reference.updateData({
+                'loginMethod': currentUser.loginMethod
+              });
             }
 
             // Update `lastLogin` timestamp
@@ -351,7 +356,13 @@ class LoginBloc extends Bloc<LoginEvents, LoginStates> {
                 password: _creds.passwordOrAccessToken,
                 loginMethod: [fbProvider]
             );
+          } else if (!currentUser.loginMethod.contains(fbProvider)){
+            currentUser.loginMethod.add(fbProvider);
+            await currentUser.snap.reference.updateData({
+              'loginMethod': currentUser.loginMethod
+            });
           }
+
           yield LoggedInState(currentUser, fbProvider, true);
         } else {
           yield LoginEmptyState();
@@ -394,6 +405,12 @@ class LoginBloc extends Bloc<LoginEvents, LoginStates> {
               );
               yield LoggedInState(currentUser, googleProvider, true);
               return;
+              // Check if Google login is in [loginMethods]
+            } else if (!currentUser.loginMethod.contains(googleProvider)){
+              currentUser.loginMethod.add(googleProvider);
+              await currentUser.snap.reference.updateData({
+                'loginMethod': currentUser.loginMethod
+              });
             }
 
             // Update timestamp
@@ -433,6 +450,12 @@ class LoginBloc extends Bloc<LoginEvents, LoginStates> {
                 email: firebaseUser.email,
                 loginMethod: [googleProvider]
             );
+            // Check if Google login is in [loginMethods]
+          } else if (!currentUser.loginMethod.contains(googleProvider)){
+            currentUser.loginMethod.add(googleProvider);
+              await currentUser.snap.reference.updateData({
+                'loginMethod': currentUser.loginMethod
+              });
           }
           yield LoggedInState(currentUser, googleProvider, true);
         } else {

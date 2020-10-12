@@ -108,7 +108,8 @@ class AddQuestionBloc extends Bloc<AddQuestionEvents, AddQuestionStates> {
             'description': event.book.description,
             'rating': event.book.rating,
             'starred': event.book.starred,
-            'categories': event.book.categories
+            'categories': event.book.categories,
+            'ref': event.book.snap.reference
           });
           _bookDoc = await booksRef.document(event.book.id).get();
         }
@@ -117,7 +118,7 @@ class AddQuestionBloc extends Bloc<AddQuestionEvents, AddQuestionStates> {
 
 
         // Create empty doc to get ID
-        var _newQuestion = _bookDoc.reference.collection('QUESTIONS').document();
+        DocumentReference _newQuestion = _bookDoc.reference.collection('QUESTIONS').document();
         // Add question to book
         await _newQuestion.setData({
           'answers': answers,
@@ -127,7 +128,8 @@ class AddQuestionBloc extends Bloc<AddQuestionEvents, AddQuestionStates> {
           'question': question,
           'questionSearch': questionSearch,
           'bookRef': booksRef.document(event.book.id),
-          'id': _newQuestion.documentID
+          'id': _newQuestion.documentID,
+          'timesCompleted': 0
         });
 
         // Update book's `updatedAt`
@@ -159,13 +161,21 @@ class AddQuestionBloc extends Bloc<AddQuestionEvents, AddQuestionStates> {
             'createdAt': _timestampNow,
             'question': event.question.contains('?') ? event.question : event.question + '?',
             'questionSearch': questionSearch,
-            'bookRef': booksRef.document(event.book.id)
+            'bookRef': booksRef.document(event.book.id),
+            'timesCompleted': 0
           });
         }
 
+        Question _loadedQuestion = Question.fromSnap(await _newQuestion.get())
+        ..questionSearch = questionSearch
+        ..correctAnswer = event.correctAnswer
+        ..author = currentUser.snap.reference
+        ..answers = answers
+        ..completedAt = _timestampNow;
+
+
         bookDebug('add_question_bloc.dart', 'event is AddQuestionEvent', 'INFO', 'Successfully added question.');
-        yield AddQuestionLoadedState(Question(event.question, questionSearch, event.correctAnswer,
-            currentUser.snap.reference, answers, _timestampNow));
+        yield AddQuestionLoadedState(_loadedQuestion);
         yield AddQuestionEmptyState();
       } catch (e) {
         bookDebug('add_question_bloc.dart', 'event is AddQuestionEvent', 'ERROR', e.toString());

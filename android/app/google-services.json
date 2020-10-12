@@ -15,6 +15,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "300269605649-gdjuv5oga11cp8ku0603sdk6j966n477.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.topset.booquiz",
+            "certificate_hash": "8e92a9be5df8da1cb4c88255d7dfe17dc1563aeb"
+          }
+        },
+        {
+          "client_id": "300269605649-82eiq51tm02nbtd4tktr03j4oih5h6vk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.topset.booquiz",
+            "certificate_hash": "19575cbba1c09123ac903a48394084209870487a"
+          }
+        },
+        {
           "client_id": "300269605649-gclecl6spn8ek5djf4ns9hb0vj6epuic.apps.googleusercontent.com",
           "client_type": 3
         }
