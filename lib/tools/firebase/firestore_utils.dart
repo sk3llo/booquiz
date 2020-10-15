@@ -250,7 +250,7 @@ class FirestoreUtils {
     }
   }
 
-  Future<List<Book>>  getMyInProgressBooks(int limit, {DocumentSnapshot startAfterDoc}) async {
+  Future<List<Book>> getMyInProgressBooks(int limit, {DocumentSnapshot startAfterDoc}) async {
     try {
       QuerySnapshot booksInProgressSnap;
       List<Book> listOfCompletedBooks = [];

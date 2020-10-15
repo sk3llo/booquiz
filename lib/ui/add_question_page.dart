@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:booquiz/blocs/add_question_bloc.dart';
@@ -11,7 +12,7 @@ import 'package:booquiz/tools/globals.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 // List if errors
-enum _Errors { question, answer1, answer2, answer3, answer4 }
+enum _Errors { questionError, answer1, answer2, answer3, answer4 }
 
 class AddQuestionPage extends StatefulWidget {
   final Book book;
@@ -23,7 +24,6 @@ class AddQuestionPage extends StatefulWidget {
 }
 
 class _AddQuestionPageState extends State<AddQuestionPage> {
-
   StreamSubscription<AddQuestionStates> newQuestionListener;
 
   TextEditingController _questionController = TextEditingController();
@@ -33,6 +33,21 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
   TextEditingController _answer3Controller = TextEditingController();
   TextEditingController _answer4Controller = TextEditingController();
 
+  int minQuestionLength = 15;
+
+  String _answer1HintText = 'Yes';
+  String _answer2HintText = 'No';
+
+  List<String> questionHints = [
+    'Was the book satisfying to read?',
+    'What is the name of the main character?',
+    'If you were making a movie of this book, who would you cast?',
+    'What feelings did this book evoke for you?',
+    'What artist would you choose to illustrate this book?'
+  ];
+
+  int questionHintPos;
+
   int correctAnswer = 1;
   bool showAnswer3 = false, showAnswer4 = false;
 
@@ -41,6 +56,8 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
   @override
   void initState() {
     super.initState();
+
+    questionHintPos = Random.secure().nextInt(questionHints.length);
   }
 
   @override
@@ -55,7 +72,6 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
     return BlocBuilder(
       bloc: addQuestionBloc,
       builder: (context, state) {
-
         return Scaffold(
           appBar: AppBar(
             elevation: 0,
@@ -81,33 +97,66 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                   child: IconButton(
                     onPressed: () {
                       FocusScope.of(context).requestFocus(FocusNode());
-                      if (validateQuestion()){
+                      if (validateQuestion(onDonePressed: true)) {
 
                         // Call bloc
-                        if (showAnswer3){
-                          if (showAnswer4){
+                        if (showAnswer3) {
+                          if (showAnswer4) {
                             addQuestionBloc.add(AddQuestionEvent(
-                                widget.book, _questionController.text.trim(), correctAnswer == 1 ? _answer1Controller : correctAnswer == 2 ? _answer2Controller.text.trim() : correctAnswer == 3 ? _answer3Controller.text.trim() : _answer4Controller.text.trim(),
-                                _answer1Controller.text.trim(), _answer2Controller.text.trim(), answer3: _answer3Controller.text.trim(), answer4: _answer4Controller.text.trim()
-                            ));
+                                widget.book,
+                                _questionController.text.trim(),
+                                correctAnswer == 1
+                                    ? _answer1Controller.text
+                                    : correctAnswer == 2
+                                        ? _answer2Controller.text.trim()
+                                        : correctAnswer == 3
+                                            ? _answer3Controller.text.trim()
+                                            : _answer4Controller.text.trim(),
+                                _answer1Controller.text.trim(),
+                                _answer2Controller.text.trim(),
+                                answer3: _answer3Controller.text.trim(),
+                                answer4: _answer4Controller.text.trim()));
                           } else {
                             addQuestionBloc.add(AddQuestionEvent(
-                                widget.book, _questionController.text.trim(), correctAnswer == 1 ? _answer1Controller : correctAnswer == 2 ? _answer2Controller.text.trim() : correctAnswer == 3 ? _answer3Controller.text.trim() : _answer4Controller.text.trim(),
-                                _answer1Controller.text.trim(), _answer2Controller.text.trim(), answer3: _answer3Controller.text.trim()
-                            ));
+                                widget.book,
+                                _questionController.text.trim(),
+                                correctAnswer == 1
+                                    ? _answer1Controller.text
+                                    : correctAnswer == 2
+                                        ? _answer2Controller.text.trim()
+                                        : correctAnswer == 3
+                                            ? _answer3Controller.text.trim()
+                                            : _answer4Controller.text.trim(),
+                                _answer1Controller.text.trim(),
+                                _answer2Controller.text.trim(),
+                                answer3: _answer3Controller.text.trim()));
                           }
                         } else {
-                          addQuestionBloc.add(AddQuestionEvent(
-                              widget.book, _questionController.text.trim(), correctAnswer == 1 ? _answer1Controller.text.trim() == '' ? 'Yes' : _answer1Controller.text.trim() : _answer2Controller.text.trim() == '' ? 'No' : _answer2Controller.text.trim(),
-                              _answer1Controller.text.trim(), _answer2Controller.text.trim()
-                          ));
-                        }
 
+                          addQuestionBloc.add(AddQuestionEvent(
+                              widget.book,
+                              _questionController.text.trim(),
+                              correctAnswer == 1
+                                  ? _answer1Controller.text.trim() == ''
+                                      ? 'Yes'
+                                      : _answer1Controller.text.trim()
+                                  : _answer2Controller.text.trim() == ''
+                                      ? 'No'
+                                      : _answer2Controller.text.trim(),
+                              _answer1Controller.text.trim(),
+                              _answer2Controller.text.trim()));
+                        }
                       }
                     },
-                    icon: state is AddQuestionLoadingState ? CircularProgressIndicator(backgroundColor: Colors.orangeAccent.shade400.withOpacity(.5),
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white)) :
-                    Icon(Icons.done, color: Colors.white, size: dimensions.dim28(),),
+                    icon: state is AddQuestionLoadingState
+                        ? CircularProgressIndicator(
+                            backgroundColor: Colors.orangeAccent.shade400.withOpacity(.5),
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white))
+                        : Icon(
+                            Icons.done,
+                            color: Colors.white,
+                            size: dimensions.dim28(),
+                          ),
                   ),
                 ),
               )
@@ -129,8 +178,10 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
               width: MediaQuery.of(context).size.width,
               padding: EdgeInsets.only(top: 56.0),
               decoration: BoxDecoration(
-                  gradient:
-                  LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [
+                  gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
                     Colors.deepOrange[100],
                     Colors.orange[100],
                   ])),
@@ -164,19 +215,19 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                                 // Erase text
                                 _questionController.text.isEmpty
                                     ? Container(
-                                  height: 24,
-                                )
+                                        height: 24,
+                                      )
                                     : GestureDetector(
-                                  onTap: () {
-                                    _questionController.text = '';
-                                    setState(() {});
-                                  },
-                                  child: Icon(
-                                    Icons.close,
-                                    size: 24,
-                                    color: Colors.black45,
-                                  ),
-                                )
+                                        onTap: () {
+                                          _questionController.text = '';
+                                          setState(() {});
+                                        },
+                                        child: Icon(
+                                          Icons.close,
+                                          size: 24,
+                                          color: Colors.black45,
+                                        ),
+                                      )
                               ],
                             ),
                           ),
@@ -187,16 +238,18 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                             decoration: ShapeDecoration(
                                 color: Colors.white30,
                                 shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.all(Radius.circular(dimensions.dim12())),
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(dimensions.dim12())),
                                     side: BorderSide(
-                                        color: errorList.contains(_Errors.question)
+                                        color: errorList.contains(_Errors.questionError)
                                             ? Colors.red[200]
                                             : Colors.white,
                                         width: 3))),
                             child: TextField(
                               onChanged: (_t) {
-                                if (_t.trim().isNotEmpty && errorList.contains(_Errors.question))
-                                  errorList.remove(_Errors.question);
+                                if (_t.trim().isNotEmpty &&
+                                    errorList.contains(_Errors.questionError))
+                                  errorList.remove(_Errors.questionError);
                                 setState(() {});
                               },
                               controller: _questionController,
@@ -204,13 +257,13 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                               decoration: InputDecoration(
                                 errorText: _questionController.text.length < 15
                                     ? _questionController.text.length == 14
-                                    ? '1 more character required'
-                                    : '${15 - _questionController.text.length} more characters required'
+                                        ? '1 more character required'
+                                        : '${15 - _questionController.text.length} more characters required'
                                     : '',
-                                hintText: 'What is the name of the main character?',
-                                errorStyle: TextStyle(color: Colors.orangeAccent[300]),
+                                hintText: questionHints.elementAt(questionHintPos),
+                                errorStyle: TextStyle(color: Colors.black45),
                                 hintStyle:
-                                TextStyle(fontSize: dimensions.sp16(), color: Colors.grey),
+                                    TextStyle(fontSize: dimensions.sp16(), color: Colors.grey),
                                 enabledBorder: InputBorder.none,
                                 disabledBorder: InputBorder.none,
                                 border: InputBorder.none,
@@ -246,21 +299,21 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                           // Erase text
                           _answer1Controller.text.isEmpty
                               ? Container(
-                            height: 24,
-                          )
+                                  height: 24,
+                                )
                               : GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _answer1Controller.text = '';
-                              });
-                              validateQuestion();
-                            },
-                            child: Icon(
-                              Icons.close,
-                              size: 24,
-                              color: Colors.black45,
-                            ),
-                          )
+                                  onTap: () {
+                                    setState(() {
+                                      _answer1Controller.text = '';
+                                    });
+                                    validateQuestion();
+                                  },
+                                  child: Icon(
+                                    Icons.close,
+                                    size: 24,
+                                    color: Colors.black45,
+                                  ),
+                                )
                         ],
                       ),
                     ),
@@ -288,15 +341,19 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                             padding: EdgeInsets.only(right: dimensions.dim36()),
                             child: CustomTextField(
                               onChanged: (_t) {
+                                if (_t.isNotEmpty)
+                                  _answer2HintText = '';
+                                else
+                                  _answer2HintText = 'No';
                                 validateQuestion();
                                 setState(() {});
                               },
                               controller: _answer1Controller,
                               style: TextStyle(fontSize: dimensions.sp16()),
                               decoration: InputDecoration(
-                                hintText: 'Yes',
+                                hintText: _answer1HintText,
                                 hintStyle:
-                                TextStyle(fontSize: dimensions.sp16(), color: Colors.grey),
+                                    TextStyle(fontSize: dimensions.sp16(), color: Colors.grey),
                                 enabledBorder: InputBorder.none,
                                 disabledBorder: InputBorder.none,
                                 border: InputBorder.none,
@@ -356,26 +413,26 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                           // Erase text
                           _answer2Controller.text.isEmpty
                               ? Container(
-                            height: 24,
-                          )
+                                  height: 24,
+                                )
                               : GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _answer2Controller.text = '';
-                              });
-                              validateQuestion();
-                            },
-                            child: Icon(
-                              Icons.close,
-                              size: 24,
-                              color: Colors.black45,
-                            ),
-                          )
+                                  onTap: () {
+                                    setState(() {
+                                      _answer2Controller.text = '';
+                                    });
+                                    validateQuestion();
+                                  },
+                                  child: Icon(
+                                    Icons.close,
+                                    size: 24,
+                                    color: Colors.black45,
+                                  ),
+                                )
                         ],
                       ),
                     ),
                     AnimatedContainer(
-                      duration: Duration(milliseconds: 300),
+                      duration: Duration(milliseconds: 400),
                       height: dimensions.dim44(),
                       alignment: Alignment.topLeft,
                       margin: EdgeInsets.symmetric(horizontal: mainPadding),
@@ -396,15 +453,18 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                           // Answer field
                           CustomTextField(
                             onChanged: (_t) {
+                              if (_t.isNotEmpty)
+                                _answer1HintText = '';
+                              else
+                                _answer1HintText = 'Yes';
                               validateQuestion();
                               setState(() {});
                             },
                             controller: _answer2Controller,
                             style: TextStyle(fontSize: dimensions.sp16()),
                             decoration: InputDecoration(
-                              hintText: 'No',
-                              hintStyle:
-                              TextStyle(fontSize: dimensions.sp16(), color: Colors.grey),
+                              hintText: _answer2HintText,
+                              hintStyle: TextStyle(fontSize: dimensions.sp16(), color: Colors.grey),
                               enabledBorder: InputBorder.none,
                               disabledBorder: InputBorder.none,
                               border: InputBorder.none,
@@ -476,8 +536,8 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                                             onTap: () {
                                               if (correctAnswer == 3 || correctAnswer == 4)
                                                 correctAnswer -= 1;
-                                              errorList
-                                                  .remove(_Errors.answer3); // Remove error if exists
+                                              errorList.remove(
+                                                  _Errors.answer3); // Remove error if exists
 
                                               if (showAnswer4) {
                                                 _answer3Controller.text = _answer4Controller.text;
@@ -491,6 +551,8 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                                               } else {
                                                 setState(() {
                                                   showAnswer3 = false;
+                                                  _answer1HintText = 'Yes';
+                                                  _answer2HintText = 'No';
                                                 });
                                               }
                                             },
@@ -511,21 +573,21 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                                       ),
                                       _answer3Controller.text.isEmpty
                                           ? Container(
-                                        height: 24,
-                                      )
+                                              height: 24,
+                                            )
                                           : GestureDetector(
-                                        onTap: () {
-                                          setState(() {
-                                            _answer3Controller.text = '';
-                                          });
-                                          validateQuestion();
-                                        },
-                                        child: Icon(
-                                          Icons.close,
-                                          size: 24,
-                                          color: Colors.black45,
-                                        ),
-                                      )
+                                              onTap: () {
+                                                setState(() {
+                                                  _answer3Controller.text = '';
+                                                });
+                                                validateQuestion();
+                                              },
+                                              child: Icon(
+                                                Icons.close,
+                                                size: 24,
+                                                color: Colors.black45,
+                                              ),
+                                            )
                                     ],
                                   ),
                                 ),
@@ -534,7 +596,7 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                                   height: dimensions.dim44(),
                                   alignment: Alignment.topLeft,
                                   margin: EdgeInsets.symmetric(horizontal: mainPadding),
-                                  padding: EdgeInsets.symmetric(horizontal: mainPadding, vertical: 4),
+                                  padding: EdgeInsets.symmetric(horizontal: mainPadding),
                                   decoration: ShapeDecoration(
                                       color: Colors.white30,
                                       shape: RoundedRectangleBorder(
@@ -581,11 +643,15 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                                             },
                                             child: Container(
                                               decoration: ShapeDecoration(
-                                                  color: correctAnswer == 3 ? Colors.orange : Colors.white,
+                                                  color: correctAnswer == 3
+                                                      ? Colors.orange
+                                                      : Colors.white,
                                                   shape: CircleBorder()),
                                               child: Icon(
                                                 Icons.done,
-                                                color: correctAnswer == 3 ? Colors.white : Colors.grey[400],
+                                                color: correctAnswer == 3
+                                                    ? Colors.white
+                                                    : Colors.grey[400],
                                               ),
                                             ),
                                           ),
@@ -598,33 +664,35 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                             )),
                         showAnswer3
                             ? Container()
-                        // Show add button
+                            // Show add button
                             : Container(
-                          alignment: Alignment.centerLeft,
-                          margin: EdgeInsets.only(
-                              top: dimensions.dim18(),
-                              right: dimensions.dim24(),
-                              left: dimensions.dim8(),
-                              bottom: dimensions.dim8()),
-                          child: MaterialButton(
-                            padding: EdgeInsets.zero,
-                            minWidth: dimensions.dim44(),
-                            elevation: 0,
-                            splashColor: Colors.white,
-                            highlightColor: Colors.transparent,
-                            shape: CircleBorder(),
-                            color: Colors.white30,
-                            onPressed: () {
-                              setState(() {
-                                showAnswer3 = true;
-                              });
-                            },
-                            child: Icon(
-                              Icons.add,
-                              color: Colors.green[200],
-                            ),
-                          ),
-                        )
+                                alignment: Alignment.centerLeft,
+                                margin: EdgeInsets.only(
+                                    top: dimensions.dim18(),
+                                    right: dimensions.dim24(),
+                                    left: dimensions.dim8(),
+                                    bottom: dimensions.dim8()),
+                                child: MaterialButton(
+                                  padding: EdgeInsets.zero,
+                                  minWidth: dimensions.dim44(),
+                                  elevation: 0,
+                                  splashColor: Colors.white,
+                                  highlightColor: Colors.transparent,
+                                  shape: CircleBorder(),
+                                  color: Colors.white30,
+                                  onPressed: () {
+                                    setState(() {
+                                      showAnswer3 = true;
+                                      _answer1HintText = '';
+                                      _answer2HintText = '';
+                                    });
+                                  },
+                                  child: Icon(
+                                    Icons.add,
+                                    color: Colors.green[200],
+                                  ),
+                                ),
+                              )
                       ],
                     ),
 
@@ -664,8 +732,8 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                                             onTap: () {
                                               if (correctAnswer == 3 || correctAnswer == 4)
                                                 correctAnswer -= 1;
-                                              errorList
-                                                  .remove(_Errors.answer4); // Remove error if exists
+                                              errorList.remove(
+                                                  _Errors.answer4); // Remove error if exists
 
                                               if (showAnswer4) {
                                                 setState(() {
@@ -691,21 +759,21 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                                       // Erase text
                                       _answer4Controller.text.isEmpty
                                           ? Container(
-                                        height: 24,
-                                      )
+                                              height: 24,
+                                            )
                                           : GestureDetector(
-                                        onTap: () {
-                                          setState(() {
-                                            _answer4Controller.text = '';
-                                          });
-                                          validateQuestion();
-                                        },
-                                        child: Icon(
-                                          Icons.close,
-                                          size: 24,
-                                          color: Colors.black45,
-                                        ),
-                                      )
+                                              onTap: () {
+                                                setState(() {
+                                                  _answer4Controller.text = '';
+                                                });
+                                                validateQuestion();
+                                              },
+                                              child: Icon(
+                                                Icons.close,
+                                                size: 24,
+                                                color: Colors.black45,
+                                              ),
+                                            )
                                     ],
                                   ),
                                 ),
@@ -714,7 +782,7 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                                   height: dimensions.dim44(),
                                   alignment: Alignment.topLeft,
                                   margin: EdgeInsets.symmetric(horizontal: mainPadding),
-                                  padding: EdgeInsets.symmetric(horizontal: mainPadding, vertical: 4),
+                                  padding: EdgeInsets.symmetric(horizontal: mainPadding),
                                   decoration: ShapeDecoration(
                                       color: Colors.white30,
                                       shape: RoundedRectangleBorder(
@@ -761,11 +829,15 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                                             },
                                             child: Container(
                                               decoration: ShapeDecoration(
-                                                  color: correctAnswer == 4 ? Colors.orange : Colors.white,
+                                                  color: correctAnswer == 4
+                                                      ? Colors.orange
+                                                      : Colors.white,
                                                   shape: CircleBorder()),
                                               child: Icon(
                                                 Icons.done,
-                                                color: correctAnswer == 4 ? Colors.white : Colors.grey[400],
+                                                color: correctAnswer == 4
+                                                    ? Colors.white
+                                                    : Colors.grey[400],
                                               ),
                                             ),
                                           ),
@@ -778,33 +850,33 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                             )),
                         showAnswer4 || !showAnswer3 && !showAnswer4
                             ? Container()
-                        // Show add button
+                            // Show add button
                             : Container(
-                          alignment: Alignment.centerLeft,
-                          margin: EdgeInsets.only(
-                              top: dimensions.dim18(),
-                              right: dimensions.dim24(),
-                              left: dimensions.dim8(),
-                              bottom: dimensions.dim8()),
-                          child: MaterialButton(
-                            padding: EdgeInsets.zero,
-                            minWidth: dimensions.dim44(),
-                            elevation: 0,
-                            splashColor: Colors.white,
-                            highlightColor: Colors.transparent,
-                            shape: CircleBorder(),
-                            color: Colors.white30,
-                            onPressed: () {
-                              setState(() {
-                                showAnswer4 = true;
-                              });
-                            },
-                            child: Icon(
-                              Icons.add,
-                              color: Colors.green[200],
-                            ),
-                          ),
-                        )
+                                alignment: Alignment.centerLeft,
+                                margin: EdgeInsets.only(
+                                    top: dimensions.dim18(),
+                                    right: dimensions.dim24(),
+                                    left: dimensions.dim8(),
+                                    bottom: dimensions.dim8()),
+                                child: MaterialButton(
+                                  padding: EdgeInsets.zero,
+                                  minWidth: dimensions.dim44(),
+                                  elevation: 0,
+                                  splashColor: Colors.white,
+                                  highlightColor: Colors.transparent,
+                                  shape: CircleBorder(),
+                                  color: Colors.white30,
+                                  onPressed: () {
+                                    setState(() {
+                                      showAnswer4 = true;
+                                    });
+                                  },
+                                  child: Icon(
+                                    Icons.add,
+                                    color: Colors.green[200],
+                                  ),
+                                ),
+                              )
                       ],
                     ),
 
@@ -817,119 +889,167 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
             ),
           ),
         );
-
       },
     );
   }
 
-  bool validateQuestion() {
-    String answ1 = _answer1Controller.text.trim();
-    String answ2 = _answer2Controller.text.trim();
-    String answ3 = _answer3Controller.text.trim();
-    String answ4 = _answer4Controller.text.trim();
+  bool validateQuestion({bool onDonePressed = false}) {
+    try {
+      String answ1 = _answer1Controller.text.trim();
+      String answ2 = _answer2Controller.text.trim();
+      String answ3 = _answer3Controller.text.trim();
+      String answ4 = _answer4Controller.text.trim();
 
-    // Check question
-    if (_questionController.text.length < 15) return false;
+      errorList.clear();
 
-    if (_questionController.text.trim().isEmpty) {
-      setState(() {
-        errorList.add(_Errors.question);
-      });
+      if (onDonePressed) {
+        // If changed 1st or 2nd answr then have to update the other one too
+        if (answ1.isNotEmpty && answ2.isEmpty) {
+          setState(() {
+            errorList.add(_Errors.answer2);
+          });
+          return false;
+        } else if (answ2.isNotEmpty && answ1.isEmpty) {
+          setState(() {
+            errorList.add(_Errors.answer1);
+          });
+          return false;
+        }
+      }
+
+      // Check question
+
+      // If empty or length < minQuestionLength
+      if (_questionController.text.trim().isEmpty && onDonePressed ||
+          _questionController.text.length < minQuestionLength && onDonePressed) {
+        setState(() {
+          errorList.add(_Errors.questionError);
+        });
+        return false;
+      } else {
+        errorList.remove(_Errors.questionError);
+      }
+
+      // Check 1 & 2
+      if (answ1.isNotEmpty && answ2.isNotEmpty) {
+        if (answ1 == answ2) {
+          setState(() {
+            errorList.add(_Errors.answer1);
+            errorList.add(_Errors.answer2);
+          });
+          return false;
+        } else {
+          errorList.remove(_Errors.answer1);
+          errorList.remove(_Errors.answer2);
+          setState(() {});
+        }
+      }
+
+      if (!checkDuplicateAnswers(answ1, answ2, answ3, answ4)) {
+        return false;
+      }
+
+      if (showAnswer3 || showAnswer4) {
+        // Check if user filled answer 1 and answer 2 (have to fill if showing > 2 answers)
+        if (onDonePressed) {
+          if (answ1.isEmpty && answ2.isEmpty) {
+            setState(() {
+              errorList.add(_Errors.answer1);
+              errorList.add(_Errors.answer2);
+            });
+            return false;
+          } else if (answ1.isEmpty) {
+            setState(() {
+              errorList.add(_Errors.answer1);
+            });
+            return false;
+          } else if (answ2.isEmpty) {
+            setState(() {
+              errorList.add(_Errors.answer2);
+            });
+            return false;
+          }
+        }
+
+        // Check duplicate answers 1 & 3
+        if (answ1 == answ3 && answ1.isNotEmpty && answ3.isNotEmpty) {
+          setState(() {
+            errorList.add(_Errors.answer1);
+            errorList.add(_Errors.answer3);
+          });
+          return false;
+        } else {
+          errorList.remove(_Errors.answer1);
+          errorList.remove(_Errors.answer3);
+          setState(() {});
+        }
+
+        // Check duplicate answers 1 & 4
+        if (answ1 == answ4 && answ1.isNotEmpty && answ1.isNotEmpty && answ4.isNotEmpty) {
+          setState(() {
+            errorList.add(_Errors.answer1);
+            errorList.add(_Errors.answer4);
+          });
+          return false;
+        } else {
+          errorList.remove(_Errors.answer1);
+          errorList.remove(_Errors.answer4);
+          setState(() {});
+        }
+
+        // Check duplicate answers 2 & 3
+        if (answ2 == answ3 && answ2.isNotEmpty && answ3.isNotEmpty) {
+          setState(() {
+            errorList.add(_Errors.answer2);
+            errorList.add(_Errors.answer3);
+          });
+          return false;
+        } else {
+          errorList.remove(_Errors.answer2);
+          errorList.remove(_Errors.answer3);
+          setState(() {});
+        }
+
+        // Check duplicate answers 2 & 4
+        if (answ2 == answ4 && answ2.isNotEmpty && answ4.isNotEmpty) {
+          setState(() {
+            errorList.add(_Errors.answer2);
+            errorList.add(_Errors.answer4);
+          });
+          return false;
+        } else {
+          errorList.remove(_Errors.answer2);
+          errorList.remove(_Errors.answer4);
+          setState(() {});
+        }
+
+        // Check duplicate answers 3 & 4
+        if (answ3 == answ4 && answ3.isNotEmpty && answ4.isNotEmpty) {
+          setState(() {
+            errorList.add(_Errors.answer3);
+            errorList.add(_Errors.answer4);
+          });
+          return false;
+        } else {
+          errorList.remove(_Errors.answer3);
+          errorList.remove(_Errors.answer4);
+          setState(() {});
+        }
+      }
+
+      return true;
+    } catch (e) {
+      bookDebug('add_question_page.dart', 'validateQuestion()', 'ERROR', e.toString());
       return false;
-    } else {
-      errorList.remove(_Errors.question);
     }
-
-    // Check 1 & 2
-    if (answ1.isNotEmpty && answ2.isNotEmpty) {
-      if (answ1 == answ2) {
-        setState(() {
-          errorList.add(_Errors.answer1);
-          errorList.add(_Errors.answer2);
-        });
-        return false;
-      } else {
-        errorList.remove(_Errors.answer1);
-        errorList.remove(_Errors.answer2);
-        setState(() {});
-      }
-    }
-
-    if (!checkDuplicateAnswers(answ1, answ2, answ3, answ4)) {
-      return false;
-    }
-
-    if (showAnswer3 || showAnswer4) {
-      // Check duplicate answers 1 & 3
-      if (answ1 == answ3 && answ1.isNotEmpty && answ3.isNotEmpty) {
-        setState(() {
-          errorList.add(_Errors.answer1);
-          errorList.add(_Errors.answer3);
-        });
-        return false;
-      } else {
-        errorList.remove(_Errors.answer1);
-        errorList.remove(_Errors.answer3);
-        setState(() {});
-      }
-
-      // Check duplicate answers 1 & 4
-      if (answ1 == answ4 && answ1.isNotEmpty && answ1.isNotEmpty && answ4.isNotEmpty) {
-        setState(() {
-          errorList.add(_Errors.answer1);
-          errorList.add(_Errors.answer4);
-        });
-        return false;
-      } else {
-        errorList.remove(_Errors.answer1);
-        errorList.remove(_Errors.answer4);
-        setState(() {});
-      }
-
-      // Check duplicate answers 2 & 3
-      if (answ2 == answ3 && answ2.isNotEmpty && answ3.isNotEmpty) {
-        setState(() {
-          errorList.add(_Errors.answer2);
-          errorList.add(_Errors.answer3);
-        });
-        return false;
-      } else {
-        errorList.remove(_Errors.answer2);
-        errorList.remove(_Errors.answer3);
-        setState(() {});
-      }
-
-      // Check duplicate answers 2 & 4
-      if (answ2 == answ4 && answ2.isNotEmpty && answ4.isNotEmpty) {
-        setState(() {
-          errorList.add(_Errors.answer2);
-          errorList.add(_Errors.answer4);
-        });
-        return false;
-      } else {
-        errorList.remove(_Errors.answer2);
-        errorList.remove(_Errors.answer4);
-        setState(() {});
-      }
-
-      // Check duplicate answers 3 & 4
-      if (answ3 == answ4 && answ3.isNotEmpty && answ4.isNotEmpty) {
-        setState(() {
-          errorList.add(_Errors.answer3);
-          errorList.add(_Errors.answer4);
-        });
-        return false;
-      } else {
-        errorList.remove(_Errors.answer3);
-        errorList.remove(_Errors.answer4);
-        setState(() {});
-      }
-    }
-
-    return true;
   }
 
-  bool checkDuplicateAnswers(String answ1, String answ2, String answ3, String answ4) {
+  bool checkDuplicateAnswers(
+    String answ1,
+    String answ2,
+    String answ3,
+    String answ4,
+  ) {
     // Check tripple duplicates
 
     // 1, 2, 3
@@ -1001,7 +1121,10 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
 
     // Check all duplicates
     if (answ1.isNotEmpty && answ2.isNotEmpty && answ3.isNotEmpty && answ4.isNotEmpty) {
-      if (answ1 == answ2 && answ1 == answ3 && answ1 == answ4) {
+      if (answ1 == answ2 && answ1 == answ3 && answ1 == answ4 ||
+          answ2 == answ1 && answ2 == answ3 && answ2 == answ4 ||
+          answ3 == answ1 && answ3 == answ2 && answ3 == answ4 ||
+          answ4 == answ1 && answ4 == answ2 && answ4 == answ3) {
         setState(() {
           errorList.add(_Errors.answer1);
           errorList.add(_Errors.answer2);
@@ -1033,16 +1156,12 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
   }
 
   Future listenToNewQuestion(BuildContext _context) async {
-
     newQuestionListener = addQuestionBloc.listen((state) {
-
-      if (state is AddQuestionLoadedState){
+      if (state is AddQuestionLoadedState) {
         // WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
         Navigator.of(_context).pop(state.question);
         // });
       }
-
     });
-
   }
 }

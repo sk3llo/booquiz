@@ -366,6 +366,30 @@ class Dimensions {
     return mSize.setHeight(220);
   }
 
+  double dim108 (){
+    return mSize.setHeight(216);
+  }
+
+  double dim105 (){
+    return mSize.setHeight(210);
+  }
+
+  double dim104 (){
+    return mSize.setHeight(208);
+  }
+
+  double dim103 (){
+    return mSize.setHeight(206);
+  }
+
+  double dim102 (){
+    return mSize.setHeight(204);
+  }
+
+  double dim101 (){
+    return mSize.setHeight(202);
+  }
+
   double dim100 (){
     return mSize.setHeight(200);
   }

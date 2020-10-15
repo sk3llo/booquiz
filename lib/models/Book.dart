@@ -35,16 +35,16 @@ class Book {
   Map<String, dynamic> data;
 
   Book(
-      {@required this.snap,
-      @required this.title,
+      {@required this.title,
       @required this.imageUrl,
       @required this.id,
       @required this.authors,
       @required this.description,
       @required this.subtitle,
       @required this.rating,
+      this.snap,
       this.categories,
-      this.starred = false,
+      this.starred,
       this.likes,
       this.quiz,
       this.updatedAt,
@@ -55,7 +55,6 @@ class Book {
       this.lastOpened,
       this.questionsCompleted,
       this.questionsInProgress,
-      this.ref,
       this.dislikes,
       this.timesCompleted,
       this.data});
@@ -83,13 +82,11 @@ class Book {
             completed:
             snap.data['completed'] != null ? snap.data['completed'] :
                 snap.data['questionsCompleted'] != null && snap.data['questionsLength'] != null
-                    ? snap.data['questionsCompleted'] != 0 &&
-                            snap.data['questionsLength'] != 0 &&
+                    ? snap.data['questionsLength'] != 0 &&
                             snap.data['questionsCompleted'] == snap.data['questionsLength']
                         ? true
                         : false : false,
             totalTimeTaken: snap.data['totalTimeTaken'] ?? 0,
-            ref: snap.data['ref'],
             likes: snap.data['likes'] ?? 0,
             dislikes: snap.data['dislikes'] ?? 0,
             quiz: [],
@@ -101,5 +98,6 @@ class Book {
     this.questionsInProgress = 0;
     this.questionsLength = 0;
     this.questionsCompleted = 0;
+    this.completed = false;
   }
 }

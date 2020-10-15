@@ -144,7 +144,6 @@ class HomePageBloc extends Bloc<HomePageBlocEvents, HomePageBlocStates>{
 
         // Replace whitespaces with +
         String _transformInput = event.input.trim().replaceAll(RegExp(r'\s'), '+').toLowerCase();
-        print(_transformInput);
 
         var response = await http.get('https://www.googleapis.com/books/v1/volumes?q=$_transformInput&maxResults=${event.maxResults}&startIndex=${event.mainList.length}', headers: requestHeaders);
 
@@ -173,7 +172,6 @@ class HomePageBloc extends Bloc<HomePageBlocEvents, HomePageBlocStates>{
             categories: volumeInfo["categories"] ?? [],
             rating: volumeInfo["averageRating"] != null ? volumeInfo["averageRating"].toDouble() : 0.0
           );
-
 
           event.mainList.add(_book);
           

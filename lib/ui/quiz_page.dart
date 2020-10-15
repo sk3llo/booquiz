@@ -11,6 +11,7 @@ import 'package:booquiz/tools/firebase/firestore_utils.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:booquiz/blocs/blocs.dart';
+import 'package:flutter_sequence_animation/flutter_sequence_animation.dart';
 import 'package:overlay_support/overlay_support.dart';
 
 class QuizPage extends StatefulWidget {
@@ -23,8 +24,9 @@ class QuizPage extends StatefulWidget {
   _QuizPageState createState() => _QuizPageState();
 }
 
-class _QuizPageState extends State<QuizPage> {
+class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
   int quizLimit = 10;
+  int finishQuizAnimPos = 0; // Finish Quiz (0 - first text fade out, 1 - 2nd etc.)
   double cardOffset = 0;
 
   List<Question> listOfCompletedQuiz = [];
@@ -39,12 +41,42 @@ class _QuizPageState extends State<QuizPage> {
   PageController pageViewController = PageController();
   CardController cardController = CardController();
 
+  AnimationController finishQuizAnimController;
+  SequenceAnimation finishQuizSequenceAnimation;
+
   @override
   void initState() {
+    finishQuizAnimController = AnimationController(vsync: this);
+    finishQuizSequenceAnimation = SequenceAnimationBuilder()
+        .addAnimatable(
+        animatable: Tween(begin: 0.0, end: 1.0),
+        from: Duration.zero,
+        to: Duration(milliseconds: 800),
+        tag: '1')
+        .addAnimatable(
+        animatable: Tween(begin: 0.0, end: 1.0),
+        from: Duration(milliseconds: 700),
+        to: Duration(milliseconds: 1000),
+        tag: '2')
+        .addAnimatable(
+        animatable: Tween(begin: 0.0, end: 1.0),
+        from: Duration(milliseconds: 900),
+        to: Duration(milliseconds: 1200),
+        tag: '3')
+        .addAnimatable(
+        animatable: Tween(begin: 0.0, end: 1.0),
+        from: Duration(milliseconds: 1100),
+        to: Duration(milliseconds: 1400),
+        tag: '4')
+        .animate(finishQuizAnimController);
+
+    // Remove completed
     if (widget.mainBook.quiz.isNotEmpty)
       widget.mainBook.quiz.removeWhere((q) => q.completedAt != null);
 
-    quizPageBloc.add(QuizPageLoadQuestionsEvent(widget.mainBook, widget.userBook, quizLimit));
+    // Trigger bloc to load questions
+    quizPageBloc.add(QuizPageLoadQuestionsEvent(
+        widget.mainBook, widget.userBook, quizLimit, finishQuizAnimController));
     _buildTimer(startTimeMilliseconds: widget.userBook.totalTimeTaken);
 
     super.initState();
@@ -55,6 +87,14 @@ class _QuizPageState extends State<QuizPage> {
     return BlocBuilder(
       bloc: quizPageBloc,
       builder: (context, state) {
+        bool _completedQuiz = state is QuizPageLoadedState &&
+            state.userBook != null &&
+            state.mainBook != null &&
+            state.userBook.questionsCompleted == state.mainBook.questionsLength ||
+            state is QuizPageEmptyState &&
+                state.userBook != null &&
+                state.mainBook != null &&
+                state.userBook.questionsCompleted == state.mainBook.questionsLength;
 
         return Scaffold(
             appBar: AppBar(
@@ -68,7 +108,8 @@ class _QuizPageState extends State<QuizPage> {
                     color: Colors.white,
                     onPressed: () {
                       int _totalTimeTaken = (_timerMinutes * 60 + _timerSeconds) * 1000;
-                      quizPageBloc.add(QuizPageUpdateTotalTimeTakenEvent(widget.userBook, _totalTimeTaken));
+                      quizPageBloc
+                          .add(QuizPageUpdateTotalTimeTakenEvent(widget.userBook, _totalTimeTaken));
                       Navigator.pop(context);
                     },
                   ),
@@ -110,18 +151,24 @@ class _QuizPageState extends State<QuizPage> {
             ),
             extendBodyBehindAppBar: true,
             body: Container(
-              height: MediaQuery.of(context).size.height,
-              width: MediaQuery.of(context).size.width,
+              height: MediaQuery
+                  .of(context)
+                  .size
+                  .height,
+              width: MediaQuery
+                  .of(context)
+                  .size
+                  .width,
               decoration: BoxDecoration(
                   gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                    Colors.deepOrange[200],
-                    Colors.deepOrange[200],
-                    Colors.deepOrange[100],
-                    Colors.orange[100],
-                  ])),
+                        Colors.deepOrange[200],
+                        Colors.deepOrange[200],
+                        Colors.deepOrange[100],
+                        Colors.orange[100],
+                      ])),
               child: Container(
                   alignment: Alignment.center,
                   child: Column(
@@ -134,11 +181,14 @@ class _QuizPageState extends State<QuizPage> {
                         child: AnimatedOpacity(
                           duration: Duration(milliseconds: 600),
                           opacity:
-                              widget.userBook.questionsCompleted == widget.mainBook.questionsLength
-                                  ? 0
-                                  : 1,
+                          widget.userBook.questionsCompleted == widget.mainBook.questionsLength
+                              ? 0
+                              : 1,
                           child: Text(
-                            'Question ${widget.userBook.questionsCompleted == widget.mainBook.questionsLength ? widget.userBook.questionsCompleted : widget.userBook.questionsCompleted + 1} / ${widget.mainBook.questionsLength}',
+                            'Question ${widget.userBook.questionsCompleted == widget.mainBook
+                                .questionsLength ? widget.userBook.questionsCompleted : widget
+                                .userBook.questionsCompleted + 1} / ${widget.mainBook
+                                .questionsLength}',
                             style: TextStyle(fontSize: dimensions.sp14(), color: Colors.white),
                           ),
                         ),
@@ -146,137 +196,151 @@ class _QuizPageState extends State<QuizPage> {
                       Expanded(
                           child: Stack(
 //                        fit: StackFit.loose,
-                        alignment: Alignment.center,
-                        children: <Widget>[
-//                            Center(
-//                              child: state is QuizPageLoadingState ? CustomLoadingIndicator() : Container(),
-//                            ),
-//                            AnimatedContainer(
-//                                duration: Duration(milliseconds: 700),
-//                                width: state != QuizPageLoadingState && widget.userBook.questionsCompleted == widget.mainBook.questionsLength ? MediaQuery.of(context).size.width : 0,
-//                                height: state != QuizPageLoadingState && widget.userBook.questionsCompleted == widget.mainBook.questionsLength? MediaQuery.of(context).size.height : 0,
-//                                child: AnimatedOpacity(
-//                                    duration: Duration(milliseconds: 700),
-//                                    opacity: state != QuizPageLoadingState && widget.userBook.questionsCompleted == widget.mainBook.questionsLength ? 1 : 0,
-//                                    child: _buildFinishQuiz(state))),
-
-                          _buildFinishQuiz(state),
-                          AnimatedPositioned(
-                            duration: Duration(milliseconds: 400),
-                            height: MediaQuery.of(context).size.height,
-                            width: MediaQuery.of(context).size.width,
-                            child: Container(
-                              margin: EdgeInsets.only(bottom: dimensions.dim40()),
-                              child: QuizSwipeCard(
-                                  minWidth: dimensions.dim200(),
-                                  minHeight: dimensions.dim400(),
-                                  maxHeight: dimensions.dim500(),
-                                  maxWidth: MediaQuery.of(context).size.width,
-                                  allowVerticalMovement: false,
-                                  stackNum: 3,
-                                  totalNum: state is QuizPageLoadedState || state is QuizPageEmptyState && state.mainBook != null && state.mainBook.quiz.isNotEmpty ? state.mainBook.quiz.length : widget.mainBook.quiz.length,
-                                  allQuiz: state is QuizPageLoadedState && state.mainBook != null && state.mainBook.quiz.isNotEmpty ? state.mainBook.quiz : widget.mainBook.quiz,
-                                  cardController: cardController,
-                                  onDragEnd: () {
-                                    setState(() {
-                                      cardOffset = 0;
-                                    });
-                                  },
-                                  swipeCompleteCallback: (_or, pos) {
-                                    // If swiped trigger bloc
-                                    if (_or == CardSwipeOrientation.LEFT || _or == CardSwipeOrientation.RIGHT)
-                                      _pickAnAnswer(widget.mainBook.quiz[pos], orintation: _or);
-                                    else {
-                                      setState(() {
-                                        selectedAnswerPos = -1;
-                                      });
-                                    }
-                                  },
-                                  swipeUpdateCallback: (_details, _alignment) {
-                                    cardOffset = _alignment.x / 8;
-                                    if (cardOffset > 25) cardOffset = 25.0;
-                                    setState(() {});
-                                  },
-                                  likeButton: FloatingActionButton(
-                                    shape: CircleBorder(
-                                        side: BorderSide(color: Colors.white54, width: 2)),
-                                    backgroundColor: Colors.deepOrange[100],
-                                    splashColor: Colors.green[300],
-                                    onPressed: () {
-                                      print(timer.tick * 1000);
-                                    },
-                                    highlightElevation: 0,
-                                    focusElevation: 0,
-                                    elevation: 0,
-                                    heroTag: 'zhzhzh',
-                                    child: Icon(
-                                      Icons.thumb_up,
-                                    ),
-                                  ),
-                                  dislikeButton: FloatingActionButton(
-                                    shape: CircleBorder(
-                                        side: BorderSide(color: Colors.white54, width: 2)),
-                                    backgroundColor: Colors.deepOrange[100],
-                                    splashColor: Colors.redAccent[200],
-                                    onPressed: () {},
-                                    highlightElevation: 0,
-                                    focusElevation: 0,
-                                    elevation: 0,
-                                    heroTag: 'hzhzhz',
-                                    child: Icon(Icons.thumb_down),
-                                  ),
-                                  cardBuilder: (context, pos) {
-                                    return Container(
-                                      decoration: ShapeDecoration(
-                                        color: Colors.white,
-                                        shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.all(Radius.circular(dimensions.dim24())),
+                            alignment: Alignment.center,
+                            children: <Widget>[
+                              _buildFinishQuiz(state, _completedQuiz),
+                              AnimatedPositioned(
+                                duration: Duration(milliseconds: 400),
+                                height: MediaQuery
+                                    .of(context)
+                                    .size
+                                    .height,
+                                width: MediaQuery
+                                    .of(context)
+                                    .size
+                                    .width,
+                                child: Container(
+                                  margin: EdgeInsets.only(bottom: dimensions.dim40()),
+                                  child: QuizSwipeCard(
+                                      minWidth: dimensions.dim200(),
+                                      minHeight: dimensions.dim400(),
+                                      maxHeight: dimensions.dim500(),
+                                      maxWidth: MediaQuery
+                                          .of(context)
+                                          .size
+                                          .width,
+                                      allowVerticalMovement: false,
+                                      stackNum: 3,
+                                      totalNum: state is QuizPageLoadedState ||
+                                          state is QuizPageEmptyState &&
+                                              state.mainBook != null &&
+                                              state.mainBook.quiz.isNotEmpty
+                                          ? state.mainBook.quiz.length
+                                          : widget.mainBook.quiz.length,
+                                      allQuiz: state is QuizPageLoadedState &&
+                                          state.mainBook != null &&
+                                          state.mainBook.quiz.isNotEmpty
+                                          ? state.mainBook.quiz
+                                          : widget.mainBook.quiz,
+                                      cardController: cardController,
+                                      onDragEnd: () {
+                                        setState(() {
+                                          cardOffset = 0;
+                                        });
+                                      },
+                                      swipeCompleteCallback: (_or, pos) {
+                                        // If swiped trigger bloc
+                                        if (_or == CardSwipeOrientation.LEFT ||
+                                            _or == CardSwipeOrientation.RIGHT)
+                                          _pickAnAnswer(widget.mainBook.quiz[pos], orintation: _or);
+                                        else {
+                                          setState(() {
+                                            selectedAnswerPos = -1;
+                                          });
+                                        }
+                                      },
+                                      swipeUpdateCallback: (_details, _alignment) {
+                                        cardOffset = _alignment.x / 8;
+                                        if (cardOffset > 25) cardOffset = 25.0;
+                                        setState(() {});
+                                      },
+                                      likeButton: FloatingActionButton(
+                                        shape: CircleBorder(
                                             side: BorderSide(color: Colors.white54, width: 2)),
+                                        backgroundColor: Colors.deepOrange[100],
+                                        splashColor: Colors.green[300],
+                                        onPressed: () {
+                                          print(timer.tick * 1000);
+                                        },
+                                        highlightElevation: 0,
+                                        focusElevation: 0,
+                                        elevation: 0,
+                                        heroTag: 'zhzhzh',
+                                        child: Icon(
+                                          Icons.thumb_up,
+                                        ),
                                       ),
-                                      child: Column(
-                                        children: <Widget>[
-                                          // Main question
-                                          Container(
-                                            height: dimensions.dim160(),
-                                            padding:
-                                                EdgeInsets.symmetric(horizontal: dimensions.dim46()),
-//                                        margin: EdgeInsets.only(bottom: dimensions.dim20()),
-                                            alignment: Alignment.center,
-                                            decoration: ShapeDecoration(
-                                                color: Colors.deepOrange[200].withOpacity(.6),
-                                                shape: RoundedRectangleBorder(
-                                                    borderRadius: BorderRadius.only(
-                                                        bottomRight:
-                                                            Radius.circular(dimensions.dim45()),
-                                                        bottomLeft:
-                                                            Radius.circular(dimensions.dim45()),
-                                                        topLeft: Radius.circular(dimensions.dim20()),
-                                                        topRight:
-                                                            Radius.circular(dimensions.dim20())),
-                                                    side: BorderSide(
-                                                        color: Colors.orange[400].withOpacity(.5)))),
-                                            child: Text(
-                                              state is QuizPageLoadedState || state is QuizPageEmptyState && state.mainBook != null && state.mainBook.quiz.isNotEmpty ? state.mainBook.quiz[pos].question : widget.mainBook.quiz[pos].question,
-                                              style: TextStyle(
-                                                  color: loginTextColor,
-                                                  fontSize: dimensions.sp20(),
-                                                  fontWeight: FontWeight.w600,
-                                                  wordSpacing: 2,
-                                                  height: 1.5),
-                                              textAlign: TextAlign.center,
-                                            ),
+                                      dislikeButton: FloatingActionButton(
+                                        shape: CircleBorder(
+                                            side: BorderSide(color: Colors.white54, width: 2)),
+                                        backgroundColor: Colors.deepOrange[100],
+                                        splashColor: Colors.redAccent[200],
+                                        onPressed: () {},
+                                        highlightElevation: 0,
+                                        focusElevation: 0,
+                                        elevation: 0,
+                                        heroTag: 'hzhzhz',
+                                        child: Icon(Icons.thumb_down),
+                                      ),
+                                      cardBuilder: (context, pos) {
+                                        return Container(
+                                          decoration: ShapeDecoration(
+                                            color: Colors.white,
+                                            shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.all(
+                                                    Radius.circular(dimensions.dim24())),
+                                                side: BorderSide(color: Colors.white54, width: 2)),
                                           ),
+                                          child: Column(
+                                            children: <Widget>[
+                                              // Main question
+                                              Container(
+                                                height: dimensions.dim160(),
+                                                padding: EdgeInsets.symmetric(
+                                                    horizontal: dimensions.dim46()),
+//                                        margin: EdgeInsets.only(bottom: dimensions.dim20()),
+                                                alignment: Alignment.center,
+                                                decoration: ShapeDecoration(
+                                                    color: Colors.deepOrange[200].withOpacity(.6),
+                                                    shape: RoundedRectangleBorder(
+                                                        borderRadius: BorderRadius.only(
+                                                            bottomRight:
+                                                            Radius.circular(dimensions.dim45()),
+                                                            bottomLeft:
+                                                            Radius.circular(dimensions.dim45()),
+                                                            topLeft:
+                                                            Radius.circular(dimensions.dim20()),
+                                                            topRight:
+                                                            Radius.circular(dimensions.dim20())),
+                                                        side: BorderSide(
+                                                            color:
+                                                            Colors.orange[400].withOpacity(.5)))),
+                                                child: Text(
+                                                  state is QuizPageLoadedState ||
+                                                      state is QuizPageEmptyState &&
+                                                          state.mainBook != null &&
+                                                          state.mainBook.quiz.isNotEmpty
+                                                      ? state.mainBook.quiz[pos].question
+                                                      : widget.mainBook.quiz[pos].question,
+                                                  style: TextStyle(
+                                                      color: loginTextColor,
+                                                      fontSize: dimensions.sp20(),
+                                                      fontWeight: FontWeight.w600,
+                                                      wordSpacing: 2,
+                                                      height: 1.5),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ),
 
-                                          buildShit(state, pos)
-                                        ],
-                                      ),
-                                    );
-                                  }),
-                            ),
-                          ),
-                        ],
-                      )),
+                                              buildShit(state, pos)
+                                            ],
+                                          ),
+                                        );
+                                      }),
+                                ),
+                              ),
+                            ],
+                          )),
                     ],
                   )),
             ));
@@ -286,7 +350,10 @@ class _QuizPageState extends State<QuizPage> {
 
   Widget _buildYesNoCard(Question question, dynamic state, int pos) {
     return Container(
-      width: MediaQuery.of(context).size.width,
+      width: MediaQuery
+          .of(context)
+          .size
+          .width,
       padding: EdgeInsets.only(top: dimensions.dim8()),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -306,9 +373,10 @@ class _QuizPageState extends State<QuizPage> {
               splashColor: Colors.blue[200],
               highlightColor: Colors.blue[50],
               color: cardOffset.isNegative
-                  ? pos == 0 || widget.mainBook.questionsLength - widget.userBook.questionsCompleted == 1
-                      ? Colors.blue[200].withOpacity(cardOffset.abs() > 1 ? 1 : cardOffset.abs())
-                      : Colors.transparent
+                  ? pos == 0 ||
+                  widget.mainBook.questionsLength - widget.userBook.questionsCompleted == 1
+                  ? Colors.blue[200].withOpacity(cardOffset.abs() > 1 ? 1 : cardOffset.abs())
+                  : Colors.transparent
                   : Colors.transparent,
               elevation: 0,
               focusElevation: 0,
@@ -368,7 +436,7 @@ class _QuizPageState extends State<QuizPage> {
               },
               shape: RoundedRectangleBorder(
                   borderRadius:
-                      BorderRadius.only(bottomRight: Radius.circular(dimensions.dim24()))),
+                  BorderRadius.only(bottomRight: Radius.circular(dimensions.dim24()))),
               padding: EdgeInsets.symmetric(horizontal: dimensions.dim16()),
               height: dimensions.dim350(),
               highlightColor: Colors.green[50],
@@ -376,8 +444,8 @@ class _QuizPageState extends State<QuizPage> {
               color: pos > listOfCompletedQuiz.length
                   ? Colors.transparent
                   : cardOffset.isNegative
-                      ? Colors.transparent
-                      : Colors.green[100].withOpacity(cardOffset > 1 ? 1 : cardOffset),
+                  ? Colors.transparent
+                  : Colors.green[100].withOpacity(cardOffset > 1 ? 1 : cardOffset),
               elevation: 0,
               highlightElevation: 0,
               focusElevation: 0,
@@ -447,7 +515,10 @@ class _QuizPageState extends State<QuizPage> {
             }
           },
           child: Container(
-            width: MediaQuery.of(context).size.width,
+            width: MediaQuery
+                .of(context)
+                .size
+                .width,
             padding: EdgeInsets.symmetric(
                 horizontal: dimensions.dim16(),
                 vertical: (question.answers[_pos]).length >= 32
@@ -525,106 +596,22 @@ class _QuizPageState extends State<QuizPage> {
     );
   }
 
-  Widget _buildFinishQuiz(dynamic state) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        AnimatedContainer(
-          duration: Duration(milliseconds: 600),
-          width: MediaQuery.of(context).size.width,
-          height: state?.userBook?.questionsCompleted == state?.mainBook?.questionsLength
-              ? dimensions.dim60()
-              : 0,
-          margin: EdgeInsets.only(top: dimensions.dim80()),
-          alignment: Alignment.topCenter,
-          child: Text(
-            'Congratulations MF!',
-            style: TextStyle(
-                color: Colors.white, fontSize: dimensions.sp24(), fontWeight: FontWeight.bold),
-          ),
-        ),
-        AnimatedContainer(
-          duration: Duration(milliseconds: 1200),
-          width: MediaQuery.of(context).size.width,
-          height: state?.userBook?.questionsCompleted == state?.mainBook?.questionsLength
-              ? dimensions.dim40()
-              : 0,
-          padding: EdgeInsets.symmetric(horizontal: dimensions.dim10()),
-          alignment: Alignment.topCenter,
-          child: Text(
-            'You have completed: ',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: dimensions.sp18(),
-              fontWeight: FontWeight.bold,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ),
-        AnimatedContainer(
-          duration: Duration(milliseconds: 1800),
-          height: state?.userBook?.questionsCompleted == state?.mainBook?.questionsLength
-              ? dimensions.dim40()
-              : 0,
-          padding: EdgeInsets.symmetric(horizontal: dimensions.dim110()),
-          alignment: Alignment.topCenter,
-          child: Text(
-            '${widget.userBook.questionsCompleted} questions',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: dimensions.sp18(),
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        AnimatedContainer(
-          duration: Duration(milliseconds: 2400),
-          height: state?.userBook?.questionsCompleted == state?.mainBook?.questionsLength
-              ? dimensions.dim50()
-              : 0,
-          padding: EdgeInsets.symmetric(horizontal: dimensions.dim10()),
-          alignment: Alignment.topCenter,
-          child: Text(
-            'in ${(widget.userBook.totalTimeTaken / 60000 < 0 ? 0 : widget.userBook.totalTimeTaken / 60000).toInt()} min and ${widget.userBook.totalTimeTaken / 1000 < 0 ? 0 : (widget.userBook.totalTimeTaken / 1000 - ((widget.userBook.totalTimeTaken / 60000 < 0 ? 0 : widget.userBook.totalTimeTaken / 60000).toInt() * 60)).toInt()} sec',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: dimensions.sp18(),
-              fontWeight: FontWeight.bold,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ),
-        Expanded(
-          child: AnimatedContainer(
-            duration: Duration(milliseconds: 2800),
-            width: MediaQuery.of(context).size.width,
-            height: state?.userBook?.questionsCompleted == state?.mainBook?.questionsLength
-                ? dimensions.dim50()
-                : 0,
-            margin: EdgeInsets.only(top: dimensions.dim30()),
-            alignment: Alignment.center,
-            child: MaterialButton(
-              key: Key('keyKEEEYOMGKEEYOMG'),
-              onPressed: () => Navigator.of(context).pop(),
-              padding: EdgeInsets.symmetric(
-                  horizontal: dimensions.dim32(), vertical: dimensions.dim16()),
-              color: Colors.orange.shade400,
-              elevation: 0,
-              child: Text(
-                'Return',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: dimensions.sp18(),
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
+  Widget buildShit(dynamic state, int pos) {
+    try {
+      return Expanded(
+          child: state is QuizPageLoadedState ||
+              state is QuizPageEmptyState &&
+                  state.mainBook != null &&
+                  state.mainBook.quiz.isNotEmpty
+              ? state.mainBook.quiz[pos].answers.length > 2
+              ? _buildMultipleAnswersCard(state.mainBook.quiz[pos], state, pos)
+              : _buildYesNoCard(state.mainBook.quiz[pos], state, pos)
+              : widget.mainBook.quiz.isNotEmpty && widget.mainBook.quiz[pos].answers.length > 2
+              ? _buildMultipleAnswersCard(widget.mainBook.quiz[pos], state, pos)
+              : _buildYesNoCard(widget.mainBook.quiz[pos], state, pos));
+    } catch (e) {
+      return Container();
+    }
   }
 
   void _buildTimer({int startTimeMilliseconds}) {
@@ -632,11 +619,11 @@ class _QuizPageState extends State<QuizPage> {
       _timerMinutes =
           (startTimeMilliseconds / 60000 < 0 ? 0 : startTimeMilliseconds / 60000).toInt();
       _timerSeconds = (widget.userBook.totalTimeTaken / 1000 -
-              ((widget.userBook.totalTimeTaken / 60000 < 0
-                          ? 0
-                          : widget.userBook.totalTimeTaken / 60000)
-                      .toInt() *
-                  60))
+          ((widget.userBook.totalTimeTaken / 60000 < 0
+              ? 0
+              : widget.userBook.totalTimeTaken / 60000)
+              .toInt() *
+              60))
           .toInt();
       setState(() {
         _timerTime = '$_timerMinutes:${_timerSeconds < 10 ? '0$_timerSeconds' : '$_timerSeconds'}';
@@ -659,7 +646,7 @@ class _QuizPageState extends State<QuizPage> {
 
           // Format timer string
           _timerTime =
-              '$_timerMinutes:${_timerSeconds < 10 ? '0$_timerSeconds' : '$_timerSeconds'}';
+          '$_timerMinutes:${_timerSeconds < 10 ? '0$_timerSeconds' : '$_timerSeconds'}';
         });
       }
     });
@@ -669,25 +656,18 @@ class _QuizPageState extends State<QuizPage> {
     bookDebug('quiz_page.dart', '_pickAnAnswer', 'INFO', 'Picking answer...');
 
     try {
+      int _timer = (_timerMinutes * 60 + _timerSeconds) * 1000;
       if (orintation != null) {
         if (orintation == CardSwipeOrientation.LEFT) {
           question.answered = question.answers[0];
-
-          listOfCompletedQuiz.add(question);
-          quizPageBloc.add(QuizPageCompleteQuestionEvent(widget.mainBook, widget.userBook,
-              listOfCompletedQuiz.last, (_timerMinutes * 60 + _timerSeconds) * 1000));
         } else if (orintation == CardSwipeOrientation.RIGHT) {
           question.answered = question.answers[1];
-
-          listOfCompletedQuiz.add(question);
-          quizPageBloc.add(QuizPageCompleteQuestionEvent(widget.mainBook, widget.userBook,
-              listOfCompletedQuiz.last, (_timerMinutes * 60 + _timerSeconds) * 1000));
         }
-      } else {
-        listOfCompletedQuiz.add(question);
-        quizPageBloc.add(QuizPageCompleteQuestionEvent(widget.mainBook, widget.userBook,
-            listOfCompletedQuiz.last, (_timerMinutes * 60 + _timerSeconds) * 1000));
       }
+
+      listOfCompletedQuiz.add(question);
+      quizPageBloc.add(QuizPageCompleteQuestionEvent(widget.mainBook, widget.userBook,
+          listOfCompletedQuiz.last, _timer, finishQuizAnimController));
     } catch (e) {
       bookDebug('quiz_page.dart', '_pickAnAnswer', 'ERROR', e.toString());
     }
@@ -700,32 +680,139 @@ class _QuizPageState extends State<QuizPage> {
     }
   }
 
+  Widget _buildFinishQuiz(dynamic state, bool _completed) {
+    return AnimatedBuilder(
+        animation: finishQuizAnimController,
+        builder: (context, anim) {
+          return Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Opacity(
+                opacity: finishQuizSequenceAnimation['1'].value,
+                child: Container(
+                  width: MediaQuery
+                      .of(context)
+                      .size
+                      .width,
+                  height: dimensions.dim60(),
+                  margin: EdgeInsets.only(top: dimensions.dim80()),
+                  alignment: Alignment.topCenter,
+                  child: Text(
+                    'Congratulations MF!',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: dimensions.sp24(),
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+              Opacity(
+                opacity: finishQuizSequenceAnimation['1'].value,
+                child: Container(
+                  width: MediaQuery
+                      .of(context)
+                      .size
+                      .width,
+                  height: dimensions.dim40(),
+                  padding: EdgeInsets.symmetric(horizontal: dimensions.dim10()),
+                  alignment: Alignment.topCenter,
+                  child: Text(
+                    'You have completed: ',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: dimensions.sp18(),
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+              Opacity(
+                opacity: finishQuizSequenceAnimation['2'].value,
+                child: Container(
+                  height: dimensions.dim40(),
+                  padding: EdgeInsets.symmetric(horizontal: dimensions.dim110()),
+                  alignment: Alignment.topCenter,
+                  child: Text(
+                    '${widget.userBook.questionsCompleted} questions',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: dimensions.sp18(),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              Opacity(
+                opacity: finishQuizSequenceAnimation['3'].value,
+                child: Container(
+                  height: dimensions.dim50(),
+                  padding: EdgeInsets.symmetric(horizontal: dimensions.dim10()),
+                  alignment: Alignment.topCenter,
+                  child: Text(
+                    'in ${(widget.userBook.totalTimeTaken / 60000 < 0 ? 0 : widget.userBook
+                        .totalTimeTaken / 60000).toInt()} min and ${widget.userBook.totalTimeTaken /
+                        1000 < 0 ? 0 : (widget.userBook.totalTimeTaken / 1000 - ((widget.userBook
+                        .totalTimeTaken / 60000 < 0 ? 0 : widget.userBook.totalTimeTaken / 60000)
+                        .toInt() * 60)).toInt()} sec',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: dimensions.sp18(),
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Opacity(
+                  opacity: finishQuizSequenceAnimation['4'].value,
+                  child: Container(
+                    width: MediaQuery
+                        .of(context)
+                        .size
+                        .width,
+                    margin: EdgeInsets.only(top: dimensions.dim30()),
+                    alignment: Alignment.center,
+                    child: MaterialButton(
+                      key: Key('keyKEEEYOMGKEEYOMG'),
+                      onPressed: () {
+                        if (finishQuizSequenceAnimation['4'].value == 1) {
+                          Navigator.of(context).pop();
+                        }
+                      },
+                      padding: EdgeInsets.symmetric(
+                          horizontal: dimensions.dim32(), vertical: dimensions.dim16()),
+                      color: Colors.orange.shade400,
+                      elevation: 0,
+                      child: Text(
+                        'Return',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: dimensions.sp18(),
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        });
+  }
+
   @override
   void dispose() {
+    // Empty state
+    quizPageBloc.add(QuizPageNullStateEvent());
+    finishQuizAnimController
+      ..reset()
+      ..dispose();
     timer?.cancel();
     pageViewController?.dispose();
     super.dispose();
-  }
-
-  Widget buildShit(dynamic state, int pos) {
-    try {
-      return Expanded (
-          child:
-          state is QuizPageLoadedState || state is QuizPageEmptyState && state.mainBook != null && state.mainBook.quiz.isNotEmpty ?
-
-          state.mainBook.quiz[pos].answers.length > 2
-              ? _buildMultipleAnswersCard(
-              state.mainBook.quiz[pos], state, pos)
-              : _buildYesNoCard(
-              state.mainBook.quiz[pos], state, pos) :
-
-          widget.mainBook.quiz.isNotEmpty && widget.mainBook.quiz[pos].answers.length > 2
-              ? _buildMultipleAnswersCard(
-              widget.mainBook.quiz[pos], state, pos)
-              : _buildYesNoCard(
-              widget.mainBook.quiz[pos], state, pos));
-    } catch (e) {
-      return Container();
-    }
   }
 }

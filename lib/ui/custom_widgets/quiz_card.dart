@@ -92,10 +92,10 @@ class QuizSwipeCard extends StatefulWidget {
     for (int i = 0; i < _stackNum; i++) {
       if (i == 0) {
         _cardSizes.add(
-            Size(minWidth + dimensions.dim115() + (widthGap / _stackNum) * i, minHeight + dimensions.dim42() + (heightGap / _stackNum) * i));
+            Size(minWidth + dimensions.dim100() + (widthGap / _stackNum) * i, minHeight + dimensions.dim22() + (heightGap / _stackNum) * i));
       } else if (i == 1) {
         _cardSizes.add(
-            Size(minWidth + dimensions.dim54() + (widthGap / _stackNum) * i, minHeight + dimensions.dim10() + (heightGap / _stackNum) * i));
+            Size(minWidth + dimensions.dim50() + (widthGap / _stackNum) * i, minHeight + dimensions.dim10() + (heightGap / _stackNum) * i));
       } else {
         _cardSizes.add(
             Size(minWidth + (widthGap / _stackNum) * i, minHeight + (heightGap / _stackNum) * i));

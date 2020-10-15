@@ -16,22 +16,22 @@ abstract class QuizPageEvents extends Equatable {
   QuizPageEvents([List props = const []]) : super();
 }
 
-class QuizPageNullStateEvent extends QuizPageEvents {
-  QuizPageNullStateEvent();
-
-  @override
-  List<Object> get props => [];
-}
-
 class QuizPageLoadQuestionsEvent extends QuizPageEvents {
   final Book mainBook; // Quiz only in the main book
   final Book userBook; // All  [timesCompleted, timeTaken, lastQuestion] here
   final int limit;
+  final AnimationController finishQuizAnimController;
 
-  QuizPageLoadQuestionsEvent(this.mainBook, this.userBook, this.limit);
+  QuizPageLoadQuestionsEvent(
+      this.mainBook, this.userBook, this.limit, this.finishQuizAnimController);
 
   @override
-  List<Object> get props => [mainBook, userBook, limit];
+  List<Object> get props => [mainBook, userBook, limit, finishQuizAnimController];
+}
+
+class QuizPageNullStateEvent extends QuizPageEvents {
+  @override
+  List<Object> get props => [];
 }
 
 class QuizPageUpdateTotalTimeTakenEvent extends QuizPageEvents {
@@ -49,11 +49,13 @@ class QuizPageCompleteQuestionEvent extends QuizPageEvents {
   final Book userBook;
   final Question question;
   final int timeTaken;
+  final AnimationController finishQuizAnimController;
 
-  QuizPageCompleteQuestionEvent(this.mainBook, this.userBook, this.question, this.timeTaken);
+  QuizPageCompleteQuestionEvent(
+      this.mainBook, this.userBook, this.question, this.timeTaken, this.finishQuizAnimController);
 
   @override
-  List<Object> get props => [mainBook, userBook, question, timeTaken];
+  List<Object> get props => [mainBook, userBook, question, timeTaken, finishQuizAnimController];
 }
 
 /// STATES
@@ -109,6 +111,11 @@ class QuizPageBloc extends Bloc<QuizPageEvents, QuizPageStates> {
 
   @override
   Stream<QuizPageStates> mapEventToState(QuizPageEvents event) async* {
+    // Empty state
+    if (event is QuizPageNullStateEvent) {
+      yield QuizPageEmptyState();
+    }
+
     if (event is QuizPageUpdateTotalTimeTakenEvent) {
       try {
         // Update total time taken when user leaves the screen
@@ -127,16 +134,11 @@ class QuizPageBloc extends Bloc<QuizPageEvents, QuizPageStates> {
 
     if (event is QuizPageLoadQuestionsEvent) {
       try {
-//        if (event.mainBook.quiz.isEmpty)
-//          yield QuizPageLoadingState();
-//        else if (state is QuizPageLoadedState || state is QuizPageLoadingState || state is QuizPageErrorState)
-//          yield QuizPageEmptyState(mainBook: event.mainBook, userBook: event.userBook);
+        // yield QuizPageEmptyState();
 
         // Get not completed questions
         List<Question> _listOfAllQuiz = await fUtils.getNotCompletedQuestions(event.mainBook.id,
             optionalLoadedUserBook: event.userBook, limit: event.limit);
-
-        // print(_listOfAllQuiz.length);
 
         if (_listOfAllQuiz != null) {
           if (_listOfAllQuiz.isNotEmpty) {
@@ -161,10 +163,18 @@ class QuizPageBloc extends Bloc<QuizPageEvents, QuizPageStates> {
             yield QuizPageLoadedState(event.mainBook, event.userBook);
           } else {
             yield QuizPageLoadedState(event.mainBook, event.userBook);
+            await event.finishQuizAnimController.forward().orCancel;
+            bookDebug('quiz_page_bloc.dart', 'event is QuizPageLoadQuestionsEvent', 'INFO',
+                'No quiz loaded. Prolly got done with it already');
           }
         } else {
-          yield QuizPageEmptyState(userBook: Book.createEmpty(), mainBook: Book.createEmpty());
+          yield QuizPageEmptyState();
         }
+      } on TickerCanceled {
+        // finish anim got cancelled reset it
+
+        event.finishQuizAnimController
+          ..reset();
       } catch (e) {
         bookDebug(
             'quiz_page_bloc.dart', 'event is QuizPageLoadQuestionsEvent', 'ERROR', e.toString());
@@ -173,8 +183,6 @@ class QuizPageBloc extends Bloc<QuizPageEvents, QuizPageStates> {
 
     if (event is QuizPageCompleteQuestionEvent) {
       try {
-//        yield QuizPageLoadingState();
-
         event.question.timeTaken = event.timeTaken;
         event.question.completedAt = Timestamp.now();
         event.question.timesCompleted = event.question.timesCompleted + 1;
@@ -183,9 +191,18 @@ class QuizPageBloc extends Bloc<QuizPageEvents, QuizPageStates> {
         event.userBook.questionsCompleted += 1;
         event.userBook.questionsInProgress -= 1;
         event.userBook.lastCompletedQuestion = event.question.snap.reference;
+        // If completed all questions also update fields below
+        if (event.userBook.questionsCompleted == event.mainBook.questionsLength) {
+          event.mainBook.timesCompleted ??= 0;
+          event.userBook.timesCompleted ??= 0;
+          event.userBook.timesCompleted += 1;
+          event.mainBook.timesCompleted += 1;
+          event.mainBook.completed = true;
+          event.userBook.completed = true;
+          event.userBook.totalTimeTaken = event.timeTaken;
+        }
 
         yield QuizPageEmptyState(mainBook: event.mainBook, userBook: event.userBook);
-
 
         // Update user's book;
         await event.userBook.snap.reference.setData({
@@ -240,14 +257,7 @@ class QuizPageBloc extends Bloc<QuizPageEvents, QuizPageStates> {
         });
 
         // When completed all questions
-        if (event.userBook.questionsCompleted == event.mainBook.questionsLength) {
-          event.mainBook.timesCompleted ??= 0;
-          event.userBook.timesCompleted ??= 0;
-          event.userBook.timesCompleted += 1;
-          event.mainBook.completed = true;
-          event.userBook.completed = true;
-          event.userBook.totalTimeTaken = event.timeTaken;
-
+        if (event.mainBook.completed == true) {
           // Update user's book doc
           await event.userBook.snap.reference.updateData({
             'timesCompleted': event.userBook.timesCompleted,
@@ -256,27 +266,30 @@ class QuizPageBloc extends Bloc<QuizPageEvents, QuizPageStates> {
           });
 
           // Update main book doc
-          await event.mainBook.ref
+          await event.mainBook.snap.reference
               .setData({'timesCompleted': event.mainBook.timesCompleted}, merge: true);
 
           // Add doc to [COMPLETED_BY] under main book
-          await event.mainBook.ref
+          await event.mainBook.snap.reference
               .collection('COMPLETED_BY')
               .document(currentUser.snap.documentID)
               .setData({
             'timeTaken': event.timeTaken,
+            'questionsCompleted': event.mainBook.questionsLength,
             'timesCompleted': event.userBook.timesCompleted,
             'userRef': currentUser.snap.reference,
             'when': event.question.completedAt
           }, merge: true);
         }
 
-        // WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-        // //   // Remove updated question from the list
-        //   event.mainBook.quiz.remove(event.question);
-        // });
+        event.mainBook.quiz.remove(event.question);
 
         yield QuizPageLoadedState(event.mainBook, event.userBook);
+        await event.finishQuizAnimController.forward().orCancel;
+      } on TickerCanceled {
+        // finish anim got cancelled reset it
+        event.finishQuizAnimController
+          ..reset();
       } catch (e) {
         bookDebug(
             'quiz_page_bloc.dart', 'event is QuizPageCompleteQuestionEvent', 'ERROR', e.toString());

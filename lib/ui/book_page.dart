@@ -79,7 +79,7 @@ class _BookPageState extends State<BookPage> with TickerProviderStateMixin {
                           ? ''
                           : state is BookPageLoadedState
                               ? state.mainBook?.questionsLength == 1
-                                  ? state.mainBook.completed ? 'Completed!' : 'Questions ' + state.userBook?.questionsCompleted.toString() + ' / ' +  state.mainBook?.questionsLength.toString()
+                                  ? state.mainBook.completed || state.userBook != null && state.userBook.questionsCompleted == state.mainBook.questionsLength ? 'Completed!' : 'Questions ' + state.userBook?.questionsCompleted.toString() + ' / ' +  state.mainBook?.questionsLength.toString()
                                   : 'Questions ' + state.userBook?.questionsCompleted.toString() + ' / ' +  state.mainBook?.questionsLength.toString()
                               : ''),
                   centerTitle: true,
@@ -94,10 +94,14 @@ class _BookPageState extends State<BookPage> with TickerProviderStateMixin {
                                 .push(MaterialPageRoute(
                                     builder: (context) => AddQuestionPage(widget.book)))
                                 .then((question) {
-                                  if (state is BookPageLoadedState || state is BookPageEmptyState){
-                                    state.mainBook.questionsLength += 1;
-                                    state.mainBook.quiz.add(question);
-                                    setState(() {});
+                                  if (question != null){
+                                    if (state is BookPageLoadedState){
+                                      state.mainBook.questionsLength += 1;
+                                      state.mainBook.quiz.add(question);
+                                      setState(() {});
+                                    } else {
+                                      bookPageBloc.add(BookPageLoadDetailsEvent(widget.book));
+                                    }
                                   }
                             });
                           },
@@ -202,7 +206,7 @@ class _BookPageState extends State<BookPage> with TickerProviderStateMixin {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: <Widget>[
 
-                                  Container(
+                                  widget.book.authors.isNotEmpty ? Container(
                                     width: widget.book.authors.length == 1
                                         ? null
                                         : MediaQuery.of(context).size.width / 2,
@@ -214,8 +218,8 @@ class _BookPageState extends State<BookPage> with TickerProviderStateMixin {
 ),
                                       maxLines: 3,
                                     ),
-                                  ),
-                                  Text(
+                                  ) : Container(),
+                                  widget.book.authors.isNotEmpty && widget.book.categories.isNotEmpty ? Text(
                                     ' |   ',
                                     style: TextStyle(
                                       color: Colors.white,
@@ -225,7 +229,8 @@ class _BookPageState extends State<BookPage> with TickerProviderStateMixin {
                                     textAlign: TextAlign.center,
                                     maxLines: 4,
                                     overflow: TextOverflow.ellipsis,
-                                  ),
+                                  ) : Container(),
+
                                   Text(
                                     ' ' + widget.book.categories.join(', '),
                                     style: TextStyle(
@@ -286,8 +291,9 @@ class _BookPageState extends State<BookPage> with TickerProviderStateMixin {
                       },
                       child: Text(
                         state is BookPageLoadedState &&
-                                state.mainBook.quiz.isEmpty &&
-                                state.mainBook.questionsLength != 0
+                                state.mainBook.questionsLength != 0 &&
+                                state.userBook != null &&
+                                state.userBook.questionsCompleted == state.mainBook.questionsLength
                             ? 'Check results'
                             : 'Start quiz',
                         style: TextStyle(

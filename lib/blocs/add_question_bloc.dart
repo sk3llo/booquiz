@@ -81,6 +81,7 @@ class AddQuestionBloc extends Bloc<AddQuestionEvents, AddQuestionStates> {
         // Add question mark if doesn't exist
         String question = event.question.contains('?') ? event.question : event.question + '?';
         // This one needed to break down question for better search
+
         List<String> questionSearch =
             await fUtils.generateDisplayNameAndUsername(question.toLowerCase());
         String ansr1 = event.answer1 == '' ? 'Yes' : event.answer1;
@@ -108,14 +109,10 @@ class AddQuestionBloc extends Bloc<AddQuestionEvents, AddQuestionStates> {
             'description': event.book.description,
             'rating': event.book.rating,
             'starred': event.book.starred,
-            'categories': event.book.categories,
-            'ref': event.book.snap.reference
+            'categories': event.book.categories
           });
           _bookDoc = await booksRef.document(event.book.id).get();
         }
-
-        // Add a question
-
 
         // Create empty doc to get ID
         DocumentReference _newQuestion = _bookDoc.reference.collection('QUESTIONS').document();

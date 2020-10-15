@@ -25,6 +25,15 @@ class BookPageLoadDetailsEvent extends BookPageEvents {
   List<Object> get props => [book];
 }
 
+class BookPageNewQuestionAddedEvent extends BookPageEvents {
+  final Book book;
+
+  BookPageNewQuestionAddedEvent(this.book);
+
+  @override
+  List<Object> get props => [book];
+}
+
 /// STATES
 
 @immutable
@@ -64,6 +73,11 @@ class BookPageBloc extends Bloc<BookPageEvents, BookPageStates> {
 
   @override
   Stream<BookPageStates> mapEventToState(BookPageEvents event) async* {
+
+    if (event is BookPageNewQuestionAddedEvent) {
+
+    }
+
     if (event is BookPageLoadDetailsEvent) {
       try {
         yield BookPageLoadingState();
@@ -73,16 +87,21 @@ class BookPageBloc extends Bloc<BookPageEvents, BookPageStates> {
 
         DocumentSnapshot _userBookSnap =
             await currentUser.snap.reference.collection('BOOKS').document(event.book.id).get();
-        // Get main book to check if new questions appeared
-        // or if _userBookSnap is null
+        // Get main book to check if new questions appeared or if _userBookSnap is null
         DocumentSnapshot _mainBookSnap = await booksRef.document(event.book.id).get();
 
+        // If user already has a book
         if (_userBookSnap.exists && _userBookSnap.data != null) {
           userBook = Book.fromSnap(_userBookSnap);
           mainBook = Book.fromSnap(_mainBookSnap);
+
           // Check if questions list changed
-          if (userBook.questionsLength != mainBook.questionsLength)
+          if (userBook.questionsLength != mainBook.questionsLength){
             userBook.questionsLength = mainBook.questionsLength;
+            await userBook.snap.reference.updateData({
+              'questionsLength': mainBook.questionsLength
+            });
+          }
 
           // Now get answers for the last not completed question if exists
           List<Question> lastNotCompletedQuestion = await fUtils
