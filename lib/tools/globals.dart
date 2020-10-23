@@ -5,7 +5,7 @@ import 'package:booquiz/blocs/blocs.dart';
 import 'package:booquiz/blocs/bottomNavBar/home_page_bloc.dart';
 import 'package:booquiz/blocs/login_bloc.dart';
 import 'package:booquiz/blocs/bottomNavBar/profile_page_bloc.dart';
-import 'package:booquiz/models/userModel.dart';
+import 'package:booquiz/models/UserModel.dart';
 import 'package:booquiz/tools/dimensions.dart';
 import 'package:booquiz/tools/firebase/firestore_utils.dart';
 import 'package:booquiz/tools/local_db/DatabaseHelper.dart';

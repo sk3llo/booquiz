@@ -2,7 +2,7 @@ import 'package:booquiz/models/Question.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-class Book {
+class UserBook {
   static final db_title = "title";
   static final db_url = "url";
   static final db_id = "id";
@@ -21,7 +21,7 @@ class Book {
   double rating;
   int questionsLength = 0;
   int totalTimeTaken = 0;
-  List<Question> quiz; // Questions and answers
+  // List<Question> quiz; // Questions and answers
   Timestamp updatedAt;
 
   // Fields for user's book
@@ -34,7 +34,7 @@ class Book {
   DocumentReference ref;
   Map<String, dynamic> data;
 
-  Book(
+  UserBook(
       {@required this.title,
       @required this.imageUrl,
       @required this.id,
@@ -46,7 +46,7 @@ class Book {
       this.categories,
       this.starred,
       this.likes,
-      this.quiz,
+      // this.quiz,
       this.updatedAt,
       this.questionsLength,
       this.totalTimeTaken,
@@ -59,7 +59,7 @@ class Book {
       this.timesCompleted,
       this.data});
 
-  Book.fromSnap(DocumentSnapshot snap)
+  UserBook.fromSnap(DocumentSnapshot snap)
       : this(
             snap: snap,
             title: snap.data['title'],
@@ -89,12 +89,12 @@ class Book {
             totalTimeTaken: snap.data['totalTimeTaken'] ?? 0,
             likes: snap.data['likes'] ?? 0,
             dislikes: snap.data['dislikes'] ?? 0,
-            quiz: [],
+            // quiz: [],
             timesCompleted: snap.data['timesCompleted'],
             data: snap.data);
 
-  Book.createEmpty() {
-    this.quiz = [];
+  UserBook.createEmpty() {
+    // this.quiz = [];
     this.questionsInProgress = 0;
     this.questionsLength = 0;
     this.questionsCompleted = 0;

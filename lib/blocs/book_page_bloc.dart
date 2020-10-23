@@ -1,4 +1,5 @@
-import 'package:booquiz/models/Book.dart';
+import 'package:booquiz/models/MainBook.dart';
+import 'package:booquiz/models/UserBook.dart';
 import 'package:booquiz/models/Question.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -17,7 +18,7 @@ abstract class BookPageEvents extends Equatable {
 }
 
 class BookPageLoadDetailsEvent extends BookPageEvents {
-  final Book book;
+  final MainBook book;
 
   BookPageLoadDetailsEvent(this.book);
 
@@ -26,7 +27,7 @@ class BookPageLoadDetailsEvent extends BookPageEvents {
 }
 
 class BookPageNewQuestionAddedEvent extends BookPageEvents {
-  final Book book;
+  final UserBook book;
 
   BookPageNewQuestionAddedEvent(this.book);
 
@@ -52,8 +53,8 @@ class BookPageLoadingState extends BookPageStates {
 }
 
 class BookPageLoadedState extends BookPageStates {
-  final Book mainBook;
-  final Book userBook;
+  final MainBook mainBook;
+  final UserBook userBook;
 
   BookPageLoadedState(this.mainBook, this.userBook);
 
@@ -82,8 +83,8 @@ class BookPageBloc extends Bloc<BookPageEvents, BookPageStates> {
       try {
         yield BookPageLoadingState();
 
-        Book userBook; // Book under (USERS/$id/BOOKS/);
-        Book mainBook; // Book under (BOOKS/$id);
+        UserBook userBook; // Book under (USERS/$id/BOOKS/);
+        MainBook mainBook; // Book under (BOOKS/$id);
 
         DocumentSnapshot _userBookSnap =
             await currentUser.snap.reference.collection('BOOKS').document(event.book.id).get();
@@ -92,8 +93,8 @@ class BookPageBloc extends Bloc<BookPageEvents, BookPageStates> {
 
         // If user already has a book
         if (_userBookSnap.exists && _userBookSnap.data != null) {
-          userBook = Book.fromSnap(_userBookSnap);
-          mainBook = Book.fromSnap(_mainBookSnap);
+          userBook = UserBook.fromSnap(_userBookSnap);
+          mainBook = MainBook.fromSnap(_mainBookSnap);
 
           // Check if questions list changed
           if (userBook.questionsLength != mainBook.questionsLength){
@@ -114,7 +115,7 @@ class BookPageBloc extends Bloc<BookPageEvents, BookPageStates> {
 
           yield BookPageLoadedState(mainBook, userBook);
         } else if (_mainBookSnap.exists && _mainBookSnap.data != null) {
-          mainBook = Book.fromSnap(_mainBookSnap);
+          mainBook = MainBook.fromSnap(_mainBookSnap);
 
           // Update user's book;
           await currentUser.snap.reference.collection('BOOKS').document(event.book.id).setData({
@@ -132,15 +133,15 @@ class BookPageBloc extends Bloc<BookPageEvents, BookPageStates> {
             'ref': mainBook.snap.reference,
             'totalTimeTaken': 0,
             'questionsCompleted': 0,
-            'completed': mainBook.questionsCompleted == mainBook.questionsLength,
+            'completed': false,
           }, merge: true);
 
           _userBookSnap = await currentUser.snap.reference.collection('BOOKS').document(event.book.id).get();
-          userBook = Book.fromSnap(_userBookSnap);
+          userBook = UserBook.fromSnap(_userBookSnap);
 
           bookDebug('book_page_bloc.dart', 'event is BookPageLoadDetailsEvent', 'INFO',
               'Loaded ${mainBook.questionsLength} questions.');
-          yield BookPageLoadedState(userBook, mainBook);
+          yield BookPageLoadedState(mainBook, userBook);
         } else {
           bookDebug(
               'book_page_bloc.dart', 'event is BookPageLoadDetailsEvent', 'INFO', 'Book is not in Firebase and has no questions yet');

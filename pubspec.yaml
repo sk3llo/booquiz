@@ -52,6 +52,7 @@ dependencies:
 
   # ETC
   email_validator: ^1.0.4
+  html: ^0.14.0+4
 #  toast: ^0.1.5
 
 dev_dependencies:

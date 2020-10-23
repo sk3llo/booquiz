@@ -4,7 +4,8 @@ import 'dart:ui';
 
 import 'package:booquiz/blocs/add_question_bloc.dart';
 import 'package:booquiz/main.dart';
-import 'package:booquiz/models/Book.dart';
+import 'package:booquiz/models/MainBook.dart';
+import 'package:booquiz/models/UserBook.dart';
 import 'package:booquiz/tools/defs.dart';
 import 'package:booquiz/ui/custom_widgets/custom_text_field.dart';
 import 'package:flutter/material.dart';
@@ -15,7 +16,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 enum _Errors { questionError, answer1, answer2, answer3, answer4 }
 
 class AddQuestionPage extends StatefulWidget {
-  final Book book;
+  final MainBook book;
 
   AddQuestionPage(this.book);
 

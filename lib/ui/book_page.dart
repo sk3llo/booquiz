@@ -1,5 +1,6 @@
 import 'package:booquiz/blocs/blocs.dart';
-import 'package:booquiz/models/Book.dart';
+import 'package:booquiz/models/MainBook.dart';
+import 'package:booquiz/models/UserBook.dart';
 import 'package:booquiz/models/Question.dart';
 import 'package:booquiz/ui/add_question_page.dart';
 import 'package:booquiz/ui/quiz_page.dart';
@@ -12,7 +13,7 @@ import 'package:booquiz/tools/defs.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class BookPage extends StatefulWidget {
-  final Book book;
+  final MainBook book;
 
   BookPage(this.book);
 
@@ -79,7 +80,7 @@ class _BookPageState extends State<BookPage> with TickerProviderStateMixin {
                           ? ''
                           : state is BookPageLoadedState
                               ? state.mainBook?.questionsLength == 1
-                                  ? state.mainBook.completed || state.userBook != null && state.userBook.questionsCompleted == state.mainBook.questionsLength ? 'Completed!' : 'Questions ' + state.userBook?.questionsCompleted.toString() + ' / ' +  state.mainBook?.questionsLength.toString()
+                                  ? state.userBook.completed || state.userBook != null && state.userBook.questionsCompleted == state.mainBook.questionsLength ? 'Completed!' : 'Questions ' + state.userBook?.questionsCompleted.toString() + ' / ' +  state.mainBook?.questionsLength.toString()
                                   : 'Questions ' + state.userBook?.questionsCompleted.toString() + ' / ' +  state.mainBook?.questionsLength.toString()
                               : ''),
                   centerTitle: true,
@@ -283,7 +284,8 @@ class _BookPageState extends State<BookPage> with TickerProviderStateMixin {
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.all(Radius.circular(mainPadding)),
                           side: BorderSide(color: Colors.white, width: 2)),
-                      onPressed: () {
+                      onPressed: () async {
+                        // await getQuote();
                         if (state is BookPageLoadedState) {
                           Navigator.of(context).push(MaterialPageRoute(
                               builder: (context) => QuizPage(state.mainBook, state.userBook)));

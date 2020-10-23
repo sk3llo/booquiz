@@ -113,6 +113,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.1.4"
+  csslib:
+    dependency: transitive
+    description:
+      name: csslib
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.16.2"
   cubit:
     dependency: transitive
     description:
@@ -310,6 +317,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.9.1+1"
+  html:
+    dependency: "direct main"
+    description:
+      name: html
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.14.0+4"
   http:
     dependency: transitive
     description:

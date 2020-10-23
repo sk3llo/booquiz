@@ -1,4 +1,4 @@
-import 'package:booquiz/models/Book.dart';
+import 'package:booquiz/models/UserBook.dart';
 import 'package:booquiz/tools/defs.dart';
 import 'package:booquiz/tools/globals.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -8,11 +8,11 @@ import 'package:flutter/cupertino.dart';
 
 class BookshelfBookWidget extends StatelessWidget {
 
-  final Book mainBook;
+  final UserBook mainBook;
 //  final Book myBook;
 //  final int questionsCompleted;
 //  final int questionsInProgress;
-  final Function(Book) onBookTapped;
+  final Function(UserBook) onBookTapped;
 
   BookshelfBookWidget({@required this.mainBook, this.onBookTapped});
 

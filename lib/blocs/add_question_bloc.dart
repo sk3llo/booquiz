@@ -1,4 +1,5 @@
-import 'package:booquiz/models/Book.dart';
+import 'package:booquiz/models/MainBook.dart';
+import 'package:booquiz/models/UserBook.dart';
 import 'package:booquiz/models/Question.dart';
 import 'package:booquiz/tools/globals.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -16,7 +17,7 @@ abstract class AddQuestionEvents extends Equatable {
 }
 
 class AddQuestionEvent extends AddQuestionEvents {
-  final Book book;
+  final MainBook book;
   final String question, correctAnswer, answer1, answer2, answer3, answer4;
 
   AddQuestionEvent(this.book, this.question, this.correctAnswer, this.answer1, this.answer2,
@@ -108,7 +109,6 @@ class AddQuestionBloc extends Bloc<AddQuestionEvents, AddQuestionStates> {
             'imageUrl': event.book.imageUrl,
             'description': event.book.description,
             'rating': event.book.rating,
-            'starred': event.book.starred,
             'categories': event.book.categories
           });
           _bookDoc = await booksRef.document(event.book.id).get();
@@ -151,8 +151,6 @@ class AddQuestionBloc extends Bloc<AddQuestionEvents, AddQuestionStates> {
         } else {
           // Add question to user
           await currentUser.snap.reference.collection('QUESTIONS').add({
-            'ref': _newQuestion,
-            'id': _newQuestion.documentID,
             'answers': answers,
             'correctAnswer': event.correctAnswer,
             'createdAt': _timestampNow,

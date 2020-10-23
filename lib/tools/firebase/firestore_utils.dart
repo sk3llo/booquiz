@@ -1,6 +1,6 @@
-import 'package:booquiz/models/Book.dart';
+import 'package:booquiz/models/UserBook.dart';
 import 'package:booquiz/models/Question.dart';
-import 'package:booquiz/models/userModel.dart';
+import 'package:booquiz/models/UserModel.dart';
 import 'package:booquiz/tools/defs.dart';
 import 'package:booquiz/tools/globals.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -147,12 +147,12 @@ class FirestoreUtils {
 
   //                 USER BOOKS RELATED SHIT
 
-  Future<List<Question>> getNotCompletedQuestions(String bookId, {int limit = 5, Book optionalLoadedUserBook}) async {
+  Future<List<Question>> getNotCompletedQuestions(String bookId, {int limit = 5, UserBook optionalLoadedUserBook}) async {
     List<Question> questionList = [];
 
     try {
       // First get last completed question from user's `BOOKS` collection
-      Book _userBook = optionalLoadedUserBook ?? Book.fromSnap(await currentUser.snap.reference.collection('BOOKS').document(bookId).get());
+      UserBook _userBook = optionalLoadedUserBook ?? UserBook.fromSnap(await currentUser.snap.reference.collection('BOOKS').document(bookId).get());
 
       // Now check if exists
       if (_userBook != null && _userBook.lastCompletedQuestion != null) {
@@ -220,7 +220,7 @@ class FirestoreUtils {
 
   Future<int> getMyInProgressQuestionsLength(String bookId) async {
     try {
-      Book _book = Book.fromSnap(await booksRef.document(bookId).get());
+      UserBook _book = UserBook.fromSnap(await booksRef.document(bookId).get());
 
       var _myBookQuiz =
           await currentUser.snap.reference.collection('QUESTIONS').document(bookId).get();
@@ -236,7 +236,7 @@ class FirestoreUtils {
       DocumentSnapshot myBookSnap =
           await currentUser.snap.reference.collection('BOOKS').document(bookId).get();
 
-      Book updatedBook = Book.fromSnap(await booksRef.reference().document(bookId).get());
+      UserBook updatedBook = UserBook.fromSnap(await booksRef.reference().document(bookId).get());
       // The difference is the amount of questions left;
       // Null means there are no MF QUESTIONS HOORAY;
 
@@ -250,10 +250,10 @@ class FirestoreUtils {
     }
   }
 
-  Future<List<Book>> getMyInProgressBooks(int limit, {DocumentSnapshot startAfterDoc}) async {
+  Future<List<UserBook>> getMyInProgressBooks(int limit, {DocumentSnapshot startAfterDoc}) async {
     try {
       QuerySnapshot booksInProgressSnap;
-      List<Book> listOfCompletedBooks = [];
+      List<UserBook> listOfCompletedBooks = [];
       
       if (startAfterDoc != null){
         booksInProgressSnap = await currentUser.snap.reference
@@ -272,7 +272,7 @@ class FirestoreUtils {
 
       if (booksInProgressSnap != null && booksInProgressSnap.documents.isNotEmpty) {
         booksInProgressSnap.documents.forEach((_doc) {
-          listOfCompletedBooks.add(Book.fromSnap(_doc));
+          listOfCompletedBooks.add(UserBook.fromSnap(_doc));
         });
       }
 
@@ -282,10 +282,10 @@ class FirestoreUtils {
     }
   }
 
-  Future<List<Book>> getMyCompletedBooks(int limit, {DocumentSnapshot startAfterDoc}) async {
+  Future<List<UserBook>> getMyCompletedBooks(int limit, {DocumentSnapshot startAfterDoc}) async {
     try {
       QuerySnapshot completedBooksSnap;
-      List<Book> listOfCompletedBooks = [];
+      List<UserBook> listOfCompletedBooks = [];
 
       if (startAfterDoc != null){
         completedBooksSnap = await currentUser.snap.reference
@@ -306,7 +306,7 @@ class FirestoreUtils {
 
       if (completedBooksSnap != null && completedBooksSnap.documents.isNotEmpty) {
         completedBooksSnap.documents.forEach((_doc) {
-          listOfCompletedBooks.add(Book.fromSnap(_doc));
+          listOfCompletedBooks.add(UserBook.fromSnap(_doc));
         });
       }
 

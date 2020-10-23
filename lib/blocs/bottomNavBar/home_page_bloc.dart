@@ -1,4 +1,4 @@
-import 'package:booquiz/models/Book.dart';
+import 'package:booquiz/models/MainBook.dart';
 import 'package:booquiz/tools/globals.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -29,7 +29,7 @@ class HomePageSearchByGenreEvent extends HomePageBlocEvents {
 class HomePageSearchByInputEvent extends HomePageBlocEvents {
   final String input;
   final int maxResults;
-  final List<Book> mainList;
+  final List<MainBook> mainList;
 
   HomePageSearchByInputEvent(this.input, {this.maxResults = 15, this.mainList = const []});
 
@@ -73,7 +73,7 @@ class HomePageBlocLoadingState extends HomePageBlocStates {
 
 class HomePageBlocLoadedState extends HomePageBlocStates {
   
-  final List<Book> mainList;
+  final List<MainBook> mainList;
   final bool noMoreItems;
 
   HomePageBlocLoadedState(this.mainList, {this.noMoreItems = false});
@@ -111,7 +111,7 @@ class HomePageBloc extends Bloc<HomePageBlocEvents, HomePageBlocStates>{
 
         var volumeInfo = jsonBook["volumeInfo"];
 
-        Book book = Book(
+        MainBook book = MainBook(
           title: volumeInfo["title"].toString() ?? '',
           imageUrl: volumeInfo["imageLinks"] != null? volumeInfo["imageLinks"]["smallThumbnail"]: "",
           id: jsonBook["id"],
@@ -161,7 +161,7 @@ class HomePageBloc extends Bloc<HomePageBlocEvents, HomePageBlocStates>{
 
           var volumeInfo = i["volumeInfo"];
 
-          Book _book = Book(
+          MainBook _book = MainBook(
             title: volumeInfo["title"].toString() ?? '',
             imageUrl: volumeInfo["imageLinks"] != null ? volumeInfo["imageLinks"]["smallThumbnail"]: "",
             id: i['id'], // jsonBook["id"],

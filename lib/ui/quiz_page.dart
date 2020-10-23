@@ -1,10 +1,12 @@
 import 'dart:async';
 
-import 'package:booquiz/models/Book.dart';
+import 'package:booquiz/models/MainBook.dart';
+import 'package:booquiz/models/UserBook.dart';
 import 'package:booquiz/models/Question.dart';
 import 'package:booquiz/tools/defs.dart';
 import 'package:booquiz/ui/custom_widgets/custom_loading_indicator.dart';
 import 'package:booquiz/ui/custom_widgets/quiz_card.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:booquiz/tools/globals.dart';
 import 'package:booquiz/tools/firebase/firestore_utils.dart';
@@ -15,8 +17,8 @@ import 'package:flutter_sequence_animation/flutter_sequence_animation.dart';
 import 'package:overlay_support/overlay_support.dart';
 
 class QuizPage extends StatefulWidget {
-  final Book mainBook;
-  final Book userBook;
+  final MainBook mainBook;
+  final UserBook userBook;
 
   QuizPage(this.mainBook, this.userBook);
 
@@ -37,6 +39,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
   String _timerTime = '0:00';
 
   int selectedAnswerPos = -1;
+  bool showResults = false;
 
   PageController pageViewController = PageController();
   CardController cardController = CardController();
@@ -682,126 +685,340 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
 
   Widget _buildFinishQuiz(dynamic state, bool _completed) {
     return AnimatedBuilder(
-        animation: finishQuizAnimController,
-        builder: (context, anim) {
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Opacity(
-                opacity: finishQuizSequenceAnimation['1'].value,
-                child: Container(
-                  width: MediaQuery
-                      .of(context)
-                      .size
-                      .width,
-                  height: dimensions.dim60(),
-                  margin: EdgeInsets.only(top: dimensions.dim80()),
-                  alignment: Alignment.topCenter,
-                  child: Text(
-                    'Congratulations MF!',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: dimensions.sp24(),
-                        fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-              Opacity(
-                opacity: finishQuizSequenceAnimation['1'].value,
-                child: Container(
-                  width: MediaQuery
-                      .of(context)
-                      .size
-                      .width,
-                  height: dimensions.dim40(),
-                  padding: EdgeInsets.symmetric(horizontal: dimensions.dim10()),
-                  alignment: Alignment.topCenter,
-                  child: Text(
-                    'You have completed: ',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: dimensions.sp18(),
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-              Opacity(
-                opacity: finishQuizSequenceAnimation['2'].value,
-                child: Container(
-                  height: dimensions.dim40(),
-                  padding: EdgeInsets.symmetric(horizontal: dimensions.dim110()),
-                  alignment: Alignment.topCenter,
-                  child: Text(
-                    '${widget.userBook.questionsCompleted} questions',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: dimensions.sp18(),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-              Opacity(
-                opacity: finishQuizSequenceAnimation['3'].value,
-                child: Container(
-                  height: dimensions.dim50(),
-                  padding: EdgeInsets.symmetric(horizontal: dimensions.dim10()),
-                  alignment: Alignment.topCenter,
-                  child: Text(
-                    'in ${(widget.userBook.totalTimeTaken / 60000 < 0 ? 0 : widget.userBook
-                        .totalTimeTaken / 60000).toInt()} min and ${widget.userBook.totalTimeTaken /
-                        1000 < 0 ? 0 : (widget.userBook.totalTimeTaken / 1000 - ((widget.userBook
-                        .totalTimeTaken / 60000 < 0 ? 0 : widget.userBook.totalTimeTaken / 60000)
-                        .toInt() * 60)).toInt()} sec',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: dimensions.sp18(),
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Opacity(
-                  opacity: finishQuizSequenceAnimation['4'].value,
-                  child: Container(
-                    width: MediaQuery
-                        .of(context)
-                        .size
-                        .width,
-                    margin: EdgeInsets.only(top: dimensions.dim30()),
-                    alignment: Alignment.center,
-                    child: MaterialButton(
-                      key: Key('keyKEEEYOMGKEEYOMG'),
-                      onPressed: () {
-                        if (finishQuizSequenceAnimation['4'].value == 1) {
-                          Navigator.of(context).pop();
-                        }
-                      },
-                      padding: EdgeInsets.symmetric(
-                          horizontal: dimensions.dim32(), vertical: dimensions.dim16()),
-                      color: Colors.orange.shade400,
-                      elevation: 0,
-                      child: Text(
-                        'Return',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: dimensions.sp18(),
-                          fontWeight: FontWeight.bold,
+      animation: finishQuizAnimController,
+      builder: (context, pos) {
+
+        return Stack(
+          alignment: Alignment.bottomCenter,
+          children: [
+            // Results
+            AnimatedOpacity(
+              duration: Duration(milliseconds: 500),
+              opacity: showResults ? 1 : 0,
+              child: Container(
+                height: MediaQuery.of(context).size.height,
+                child: ListView.builder(
+                  itemCount: state is QuizPageLoadedState || state is QuizPageEmptyState && state.mainBook != null ? state.mainBook.completedQuiz.length : 0,
+                  itemBuilder: (context, pos) {
+
+                    Question _q = state.mainBook.completedQuiz[pos];
+
+                    // Result question
+                    return Row(
+                      children: [
+                        // Question number
+                        Container(
+                          margin: EdgeInsets.symmetric(horizontal: dimensions.dim8()),
+                          alignment: Alignment.topRight,
+                          child: Text(
+                            (pos + 1).toString(),
+                            style: TextStyle(
+                              color: Colors.black54,
+                              fontSize: dimensions.sp18(),
+                              fontWeight: FontWeight.bold
+                            ),
+                          ),
                         ),
-                        textAlign: TextAlign.center,
+
+                        Container(
+                          width: MediaQuery.of(context).size.width,
+                          height: dimensions.dim80(),
+                          margin: EdgeInsets.symmetric(horizontal: dimensions.dim18()),
+                          decoration: ShapeDecoration(
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.all(Radius.circular(16)),
+                                  side: BorderSide(
+                                      color: Colors.white
+                                  )
+                              )
+                          ),
+                          child: Column(
+                            children: [
+                              // Question
+                              Container(
+                                margin: EdgeInsets.only(top: dimensions.dim2()),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  _q.question,
+                                  style: TextStyle(
+                                      color: Colors.grey[400],
+                                      fontSize: dimensions.sp15()
+                                  ),
+                                ),
+                              ),
+
+
+
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+
+                  },
+                ),
+              ),
+            ),
+
+            // Finish quiz
+            AnimatedContainer(
+              duration: Duration(milliseconds: 500),
+              height: showResults ? 0 : MediaQuery.of(context).size.height,
+              child: AnimatedOpacity(
+                duration: Duration(milliseconds: 500),
+                opacity: showResults ? 0 : 1,
+                child: Visibility(
+                  child: SingleChildScrollView(
+                    physics: BouncingScrollPhysics(),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+
+                        // Congrats
+                        Opacity(
+                          opacity: finishQuizSequenceAnimation['1'].value,
+                          child: Container(
+                            width: MediaQuery
+                                .of(context)
+                                .size
+                                .width,
+                            height: dimensions.dim50(),
+                            alignment: Alignment.topCenter,
+                            child: Text(
+                              'Congratulations!',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: dimensions.sp24(),
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                        // Image
+                        Center(child: Opacity(
+                            opacity: .75,
+                            child: Image(image: AssetImage('assets/images/finish_quiz_trophy.png'), height: dimensions.dim140(), fit: BoxFit.fill,))),
+                        // Your Score
+                        Opacity(
+                          opacity: finishQuizSequenceAnimation['1'].value,
+                          child: Container(
+                            width: MediaQuery
+                                .of(context)
+                                .size
+                                .width,
+                            height: dimensions.dim40(),
+                            padding: EdgeInsets.symmetric(horizontal: dimensions.dim10()),
+                            margin: EdgeInsets.only(top: dimensions.dim30()),
+                            alignment: Alignment.topCenter,
+                            child: Text(
+                              'YOUR SCORE:',
+                              style: TextStyle(
+                                color: Colors.white54,
+                                fontSize: dimensions.sp16(),
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                        // Score
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Opacity(
+                              opacity: finishQuizSequenceAnimation['2'].value,
+                              child: Container(
+                                height: dimensions.dim40(),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  '${widget.userBook.questionsCompleted}',
+                                  style: TextStyle(
+                                    color: Colors.orangeAccent.shade400.withOpacity(.6),
+                                    fontSize: dimensions.sp28(),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            Opacity(
+                              opacity: finishQuizSequenceAnimation['2'].value,
+                              child: Container(
+                                height: dimensions.dim40(),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  '  /  ${widget.mainBook.questionsLength}',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: dimensions.sp28(),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        // Quote
+                        Stack(
+                          children: [
+                            Opacity(
+                              opacity: state is QuizPageLoadedState && state.quote == null ? finishQuizSequenceAnimation['4'].value : 0,
+                              child: Container(
+                                  width: MediaQuery.of(context).size.width,
+                                  height: dimensions.dim80(),
+                                  alignment: Alignment.bottomCenter,
+                                  child: Container(
+                                      height: dimensions.dim20(),
+                                      width: dimensions.dim20(),
+                                      alignment: Alignment.bottomCenter,
+                                      child: Opacity(
+                                          opacity: .4,
+                                          child: CustomLoadingIndicator()))),
+                            ),
+
+                            AnimatedOpacity(
+                              duration: Duration(milliseconds: 500),
+                              opacity: state is QuizPageLoadedState && state.quote != null ? 1 : 0,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  // Quote
+                                  Container(
+                                    color: Colors.purple.withOpacity(.025),
+                                    padding: EdgeInsets.symmetric(vertical: dimensions.dim6(), horizontal: dimensions.dim12()),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      state is QuizPageLoadedState ? state.quote != null ? state.quote['quote'] : '' : '',
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: dimensions.sp16()
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                  // Author
+                                  Container(
+                                    // color: Colors.orange.withOpacity(.1),
+                                    padding: EdgeInsets.symmetric(vertical: dimensions.dim6(), horizontal: dimensions.dim16()),
+                                    alignment: Alignment.centerRight,
+                                    child: Text(
+                                      state is QuizPageLoadedState ? state.quote != null ? state.quote['authors'] : '' : '',
+                                      style: TextStyle(
+                                          color: Colors.red.withOpacity(.5),
+                                          fontSize: dimensions.sp16(),
+                                          fontWeight: FontWeight.bold
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        Container(
+                          height: dimensions.dim80(),
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // 'Show result' button
+            Positioned(
+              bottom: 0.0,
+              child: Container(
+                color: Colors.orange[100],
+                height: dimensions.dim80(),
+                width: MediaQuery.of(context).size.width,
+                alignment: Alignment.bottomCenter,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Opacity(
+                      opacity: finishQuizSequenceAnimation['4'].value,
+                      child: Container(
+                        margin: EdgeInsets.only(bottom: dimensions.dim30()),
+                        alignment: Alignment.bottomCenter,
+                        child: MaterialButton(
+                          key: Key('keyKEEEYOMGKEEYOMG'),
+                          minWidth: dimensions.dim180(),
+                          onPressed: () {
+                            setState(() {
+                              showResults = !showResults;
+                            });
+                          },
+                          padding: EdgeInsets.symmetric(
+                              horizontal: dimensions.dim32(), vertical: dimensions.dim16()),
+                          color: Colors.blue.shade200,
+                          elevation: 0,
+                          child: Text(
+                            'SHOW RESULT',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: dimensions.sp14(),
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+
+                    Opacity(
+                      opacity: finishQuizSequenceAnimation['4'].value,
+                      child: Container(
+                        margin: EdgeInsets.only(bottom: dimensions.dim30()),
+                        alignment: Alignment.bottomCenter,
+                        child: MaterialButton(
+                          key: Key('keyKEEEYOMGKEEYOMG'),
+                          minWidth: dimensions.dim180(),
+                          onPressed: () {
+                            if (finishQuizSequenceAnimation['4'].value == 1) {
+                              Navigator.of(context).pop();
+                            }
+                          },
+                          padding: EdgeInsets.symmetric(
+                              horizontal: dimensions.dim32(), vertical: dimensions.dim16()),
+                          color: Colors.orange.shade400,
+                          elevation: 0,
+                          child: Text(
+                            'Return',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: dimensions.sp14(),
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          );
-        });
+            )
+          ],
+        );
+
+      },
+    );
+  }
+
+  String _buildMinutes() {
+    return '${(widget.userBook.totalTimeTaken / 60000 < 0 ? 0 : widget.userBook
+        .totalTimeTaken / 60000).toInt()}';
+  }
+  String _buildSeconds() {
+    return '${widget.userBook.totalTimeTaken /
+        1000 < 0 ? 0 : (widget.userBook.totalTimeTaken / 1000 - ((widget.userBook
+        .totalTimeTaken / 60000 < 0 ? 0 : widget.userBook.totalTimeTaken / 60000)
+        .toInt() * 60)).toInt()}';
   }
 
   @override

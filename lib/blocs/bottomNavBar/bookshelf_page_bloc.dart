@@ -1,4 +1,4 @@
-import 'package:booquiz/models/Book.dart';
+import 'package:booquiz/models/UserBook.dart';
 import 'package:booquiz/tools/globals.dart';
 import 'package:flutter/material.dart';
 import 'package:equatable/equatable.dart';
@@ -14,7 +14,7 @@ abstract class BookshelfPageEvents extends Equatable {
 }
 
 class BookshelfPageLoadInProgressEvent extends BookshelfPageEvents {
-  final List<Book> mList;
+  final List<UserBook> mList;
   final int limit;
 
   BookshelfPageLoadInProgressEvent(this.mList, {this.limit = 10});
@@ -24,7 +24,7 @@ class BookshelfPageLoadInProgressEvent extends BookshelfPageEvents {
 }
 
 class BookshelfPageLoadCompletedEvent extends BookshelfPageEvents {
-  final List<Book> mList;
+  final List<UserBook> mList;
   final int limit;
 
   BookshelfPageLoadCompletedEvent(this.mList, {this.limit = 10});
@@ -49,7 +49,7 @@ class BookshelfPageEmptyState extends BookshelfPageStates {
 }
 
 class BookshelfPageLoadingState extends BookshelfPageStates {
-  final List<Book> mList;
+  final List<UserBook> mList;
   BookshelfPageLoadingState(this.mList);
 
   @override
@@ -61,7 +61,7 @@ class BookshelfPageLoadingState extends BookshelfPageStates {
 }
 
 class BookshelfPageCompletedLoadedState extends BookshelfPageStates {
-  final List<Book> mList;
+  final List<UserBook> mList;
   final bool noMoreItems;
 
   BookshelfPageCompletedLoadedState(this.mList, {this.noMoreItems = false});
@@ -75,7 +75,7 @@ class BookshelfPageCompletedLoadedState extends BookshelfPageStates {
 }
 
 class BookshelfPageInProgressLoadedState extends BookshelfPageStates {
-  final List<Book> mList;
+  final List<UserBook> mList;
   final bool noMoreItems;
 
   BookshelfPageInProgressLoadedState(this.mList, {this.noMoreItems = false});
@@ -111,7 +111,7 @@ class BookshelfPageBloc extends Bloc<BookshelfPageEvents, BookshelfPageStates>{
 
       try {
 
-        List<Book> _inProgressBooks = [];
+        List<UserBook> _inProgressBooks = [];
 
         if (event.mList.isNotEmpty){
           _inProgressBooks = await fUtils.getMyInProgressBooks(event.limit, startAfterDoc: event.mList.last.snap);
@@ -142,7 +142,7 @@ class BookshelfPageBloc extends Bloc<BookshelfPageEvents, BookshelfPageStates>{
 
       try {
 
-        List<Book> _completedBooks = [];
+        List<UserBook> _completedBooks = [];
 
         if (event.mList.isNotEmpty){
           _completedBooks = await fUtils.getMyInProgressBooks(event.limit, startAfterDoc: event.mList.last.snap);

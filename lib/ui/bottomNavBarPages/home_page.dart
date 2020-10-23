@@ -2,7 +2,8 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:booquiz/blocs/bottomNavBar/home_page_bloc.dart';
-import 'package:booquiz/models/Book.dart';
+import 'package:booquiz/models/MainBook.dart';
+import 'package:booquiz/models/UserBook.dart';
 import 'package:booquiz/tools/globals.dart';
 import 'package:booquiz/ui/book_page.dart';
 import 'package:booquiz/ui/custom_widgets/book_widget.dart';
@@ -38,7 +39,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
   FocusNode searchFieldFocus = FocusNode();
   ScrollController searchBooksScrollController = ScrollController();
   bool searchBookView = false;
-  List<Book> searchBooksList = [];
+  List<MainBook> searchBooksList = [];
 
 
   int bottonNavBarIndex = 0;

@@ -4,7 +4,7 @@ import 'dart:typed_data';
 
 import 'package:apple_sign_in/apple_sign_in.dart';
 import 'package:booquiz/models/loginCreds.dart';
-import 'package:booquiz/models/userModel.dart';
+import 'package:booquiz/models/UserModel.dart';
 import 'package:booquiz/tools/defs.dart';
 import 'package:booquiz/tools/globals.dart';
 import 'package:booquiz/tools/loginwith.dart';

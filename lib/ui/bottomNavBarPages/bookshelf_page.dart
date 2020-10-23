@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:booquiz/blocs/blocs.dart';
-import 'package:booquiz/models/Book.dart';
+import 'package:booquiz/models/UserBook.dart';
 import 'package:booquiz/tools/defs.dart';
 import 'package:booquiz/tools/globals.dart';
 import 'package:booquiz/ui/custom_widgets/book_widget.dart';
@@ -38,8 +38,8 @@ class _BookshelfPageState extends State<BookshelfPage> with TickerProviderStateM
   ScrollController _inProgressListController = ScrollController();
   ScrollController _completedListController = ScrollController();
 
-  List<Book> listInProgress = [];
-  List<Book> completedList = [];
+  List<UserBook> listInProgress = [];
+  List<UserBook> completedList = [];
 
   @override
   void initState() {
