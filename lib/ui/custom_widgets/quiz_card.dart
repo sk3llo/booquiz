@@ -47,7 +47,7 @@ class QuizSwipeCard extends StatefulWidget {
       @required List<Question> allQuiz, // List of all questions
       AmassOrientation orientation = AmassOrientation.BOTTOM,
       int stackNum = 3,
-      int animDuration = 800,
+      int animDuration = 400,
       double swipeEdge = 3.0,
       double swipeEdgeVertical = 8.0,
       bool swipeUp = false,

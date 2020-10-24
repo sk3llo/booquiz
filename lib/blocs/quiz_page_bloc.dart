@@ -53,10 +53,11 @@ class QuizPageClearBookRecordEvent extends QuizPageEvents {
 }
 
 class QuizPageUpdateTotalTimeTakenEvent extends QuizPageEvents {
+  final MainBook mainBook;
   final UserBook userBook;
   final int totalTimeTaken;
 
-  QuizPageUpdateTotalTimeTakenEvent(this.userBook, this.totalTimeTaken);
+  QuizPageUpdateTotalTimeTakenEvent(this.mainBook, this.userBook, this.totalTimeTaken);
 
   @override
   List<Object> get props => [userBook, totalTimeTaken];
@@ -153,11 +154,18 @@ class QuizPageBloc extends Bloc<QuizPageEvents, QuizPageStates> {
     if (event is QuizPageUpdateTotalTimeTakenEvent) {
       try {
         // Update total time taken when user leaves the screen
-        await currentUser.snap.reference.updateData({'totalTimeTaken': event.totalTimeTaken});
+        await event.userBook.snap.reference.updateData({'totalTimeTaken': event.totalTimeTaken});
+
         bookDebug('quiz_page_bloc.dart', 'event is QuizPageLoadQuestionsEvent', 'INFO',
             'Successfully updated totalTimeTaken from ${event.userBook.totalTimeTaken} to ${event.totalTimeTaken}');
 
         event.userBook.totalTimeTaken = event.totalTimeTaken;
+
+        // Update states
+        yield QuizPageLoadedState(event.mainBook, event.userBook, quote: _quote);
+        bookPageBloc.add(BookPageUpdateEvent(event.mainBook, event.userBook));
+
+
       } catch (e) {
         event.userBook.totalTimeTaken = event.totalTimeTaken;
 
@@ -331,6 +339,7 @@ class QuizPageBloc extends Bloc<QuizPageEvents, QuizPageStates> {
             'timeTaken': event.timeTaken,
             'timesCompleted': 1,
             'userRef': currentUser.snap.reference,
+            'userPath': currentUser.snap.reference.path,
             'when': event.question.completedAt
           }, merge: true);
         } else {
@@ -341,6 +350,7 @@ class QuizPageBloc extends Bloc<QuizPageEvents, QuizPageStates> {
             'timeTaken': event.timeTaken,
             'timesCompleted': event.userBook.timesCompleted,
             'userRef': currentUser.snap.reference,
+            'userPath': currentUser.snap.reference.path,
             'when': event.question.completedAt
           }, merge: true);
         }
@@ -383,17 +393,23 @@ class QuizPageBloc extends Bloc<QuizPageEvents, QuizPageStates> {
             'questionsCompleted': event.mainBook.questionsLength,
             'timesCompleted': event.userBook.timesCompleted,
             'userRef': currentUser.snap.reference,
+            'userPath': currentUser.snap.reference.path,
             'when': event.question.completedAt
           }, merge: true);
+
+
+          event.mainBook.quiz.remove(event.question);
+          yield QuizPageLoadedState(event.mainBook, event.userBook, quote: _quote);
+          await event.finishQuizAnimController.forward();
+          return;
         }
 
         event.mainBook.quiz.remove(event.question);
 
         yield QuizPageLoadedState(event.mainBook, event.userBook, quote: _quote);
-        await event.finishQuizAnimController.forward();
 
         if (event.userBook.questionsCompleted - event.mainBook.questionsLength <= 3 &&
-            _quote == null) {
+            _quote == null || _quote.isEmpty) {
           _quote = await getQuote();
         }
       } catch (e) {
@@ -423,12 +439,12 @@ class QuizPageBloc extends Bloc<QuizPageEvents, QuizPageStates> {
 
         // Reset main book doc
         await event.mainBook.snap.reference
-            .updateData({'timesCompleted': event.mainBook.timesCompleted});
+            .updateData({'timesCompleted': 0});
 
         // Erase COMPLETED_BY in MAIN BOOK
         await event.mainBook.snap.reference
             .collection('COMPLETED_BY')
-            .where('useRef', isEqualTo: currentUser.snap.reference)
+            .where('usePath', isEqualTo: currentUser.snap.reference.path)
             .getDocuments()
             .then((d) async {
           if (d != null && d.documents.isNotEmpty){
@@ -442,7 +458,7 @@ class QuizPageBloc extends Bloc<QuizPageEvents, QuizPageStates> {
             .getDocuments()
             .then((_quiz) async {
           await Future.forEach<DocumentSnapshot>(_quiz.documents, (_q) async {
-            await _q.reference.updateData({'timesCompleted': _q.data['timesCompleted'] - 1});
+            await _q.reference.updateData({'timesCompleted': 0});
           });
         });
 
@@ -454,7 +470,7 @@ class QuizPageBloc extends Bloc<QuizPageEvents, QuizPageStates> {
           //.where('useRef', isEqualTo: currentUser.snap.reference.path)
           await Future.forEach<DocumentSnapshot>(d.documents, (_q) async {
             await _q.reference.collection('COMPLETED_BY')
-                .where('useRef', isEqualTo: currentUser.snap.reference)
+                .where('usePath', isEqualTo: currentUser.snap.reference.path)
                 .getDocuments()
                 .then((d) async {
                   if (d != null && d.documents.isNotEmpty){
@@ -465,8 +481,26 @@ class QuizPageBloc extends Bloc<QuizPageEvents, QuizPageStates> {
         });
 
 
-        // DELETE CURRENT USER BOOK NOW
-        await event.userBook.snap.reference.delete();
+        // DELETE ALL COMPLETED QUIZ FROM USER'S BOOK
+        await event.userBook.snap.reference.collection('COMPLETED_QUIZ').getDocuments().then((docs) async {
+          if (docs != null && docs.documents.isNotEmpty) {
+            await Future.forEach<DocumentSnapshot>(docs.documents, (_d) async {
+              await _d.reference.delete();
+            });
+          }
+        });
+
+        // UPDATE USER'S BOOK
+        await event.userBook.snap.reference.updateData({
+          'totalTimeTaken': 0,
+          'timesCompleted': 0,
+          'questionsCompleted': 0,
+          'completed': false,
+          'lastCompletedQuestion': null
+        });
+
+        bookDebug(
+            'quiz_page_bloc.dart', 'event is QuizPageClearBookRecordEvent', 'INFO', 'Successfully erased book\'s records.');
 
         yield QuizPageEmptyState(mainBook: event.mainBook, userBook: event.userBook);
 

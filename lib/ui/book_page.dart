@@ -86,8 +86,9 @@ class _BookPageState extends State<BookPage> with TickerProviderStateMixin {
                         : state is BookPageLoadingState
                             ? ''
                             : state is BookPageLoadedState
-                                ? state.mainBook?.questionsLength == 1
-                                    ? state.userBook.completed || state.userBook != null && state.userBook.questionsCompleted == state.mainBook.questionsLength ? 'Completed!' : 'Questions ' + state.userBook?.questionsCompleted.toString() + ' / ' +  state.mainBook?.questionsLength.toString()
+                    ? state.userBook.completed || state.userBook != null && state.userBook.questionsCompleted == state.mainBook.questionsLength ? 'Completed!' :
+                                state.mainBook?.questionsLength == 1 ?
+                                     'Questions ' + state.userBook?.questionsCompleted.toString() + ' / ' +  state.mainBook?.questionsLength.toString()
                                     : 'Questions ' + state.userBook?.questionsCompleted.toString() + ' / ' +  state.mainBook?.questionsLength.toString()
                                 : ''),
                   ),

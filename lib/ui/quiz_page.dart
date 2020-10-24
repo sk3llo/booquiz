@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:booquiz/tools/globals.dart';
 import 'package:booquiz/tools/firebase/firestore_utils.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:booquiz/blocs/blocs.dart';
 import 'package:flutter_sequence_animation/flutter_sequence_animation.dart';
@@ -46,54 +47,14 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
 
   AnimationController finishQuizAnimController;
   SequenceAnimation finishQuizSequenceAnimation;
-  // AnimationController compQuestionAnimController;
-  // SequenceAnimation compQuestionSequenceAnimation;
+  List<AnimationController> completedQuizControllers = [];
+  List<SequenceAnimation> completedQuizSequenceAnim = [];
 
   @override
   void initState() {
-    finishQuizAnimController = AnimationController(vsync: this);
-    finishQuizSequenceAnimation = SequenceAnimationBuilder()
-        .addAnimatable(
-            animatable: Tween(begin: 0.0, end: 1.0),
-            from: Duration.zero,
-            to: Duration(milliseconds: 800),
-            tag: '1')
-        .addAnimatable(
-            animatable: Tween(begin: 0.0, end: 1.0),
-            from: Duration(milliseconds: 700),
-            to: Duration(milliseconds: 1000),
-            tag: '2')
-        .addAnimatable(
-            animatable: Tween(begin: 0.0, end: 1.0),
-            from: Duration(milliseconds: 900),
-            to: Duration(milliseconds: 1200),
-            tag: '3')
-        .addAnimatable(
-            animatable: Tween(begin: 0.0, end: 1.0),
-            from: Duration(milliseconds: 1100),
-            to: Duration(milliseconds: 1400),
-            tag: '4')
-        .animate(finishQuizAnimController);
-    // compQuestionAnimController = AnimationController(vsync: this);
-    // compQuestionSequenceAnimation = SequenceAnimationBuilder()
-    //     .addAnimatable(
-    //         animatable: Tween<double>(begin: dimensions.dim80(), end: dimensions.dim180()),
-    //         from: Duration.zero,
-    //         to: Duration(milliseconds: 300),
-    //         tag: '1')
-    //     .addAnimatable(
-    //         animatable: Tween<double>(begin: dimensions.dim40(), end: dimensions.dim60()),
-    //         from: Duration(milliseconds: 200),
-    //         to: Duration(milliseconds: 400),
-    //         tag: '2')
-    //     .addAnimatable(
-    //         animatable: Tween<double>(begin: 0.0, end: dimensions.dim100()),
-    //         from: Duration(milliseconds: 300),
-    //         to: Duration(milliseconds: 600),
-    //         tag: '3')
-    //     .animate(compQuestionAnimController);
 
-    // Remove completed
+    _initControllers();
+
     if (widget.mainBook.quiz.isNotEmpty)
       widget.mainBook.quiz.removeWhere((q) => q.completedAt != null);
 
@@ -130,9 +91,12 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                   child: BackButton(
                     color: Colors.white,
                     onPressed: () {
-                      int _totalTimeTaken = (_timerMinutes * 60 + _timerSeconds) * 1000;
-                      quizPageBloc
-                          .add(QuizPageUpdateTotalTimeTakenEvent(widget.userBook, _totalTimeTaken));
+                      if (!_completedQuiz) {
+                        int _totalTimeTaken = (_timerMinutes * 60 + _timerSeconds) * 1000;
+                        quizPageBloc
+                            .add(QuizPageUpdateTotalTimeTakenEvent(widget.mainBook, widget.userBook,
+                            _totalTimeTaken));
+                      }
                       Navigator.pop(context);
                     },
                   ),
@@ -197,8 +161,8 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                           children: [
                             Container(
                               padding: EdgeInsets.only(top: dimensions.dim6()),
-                              height: dimensions.dim80(),
-                              alignment: Alignment.center,
+                              height: dimensions.dim60(),
+                              alignment: Alignment.bottomCenter,
                               child: AnimatedOpacity(
                                 duration: Duration(milliseconds: 600),
                                 opacity: widget.userBook.questionsCompleted ==
@@ -236,7 +200,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                         alignment: Alignment.center,
                         children: <Widget>[
                           // Finish quiz screen
-                          _buildFinishQuiz(state, _completedQuiz),
+                          if (_completedQuiz) _buildFinishQuiz(state),
 
                           // Main cards
                           AnimatedPositioned(
@@ -418,9 +382,8 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                     child: Text(
                       '<',
                       style: TextStyle(
-                        fontSize: pos > listOfCompletedQuiz.length
-                            ? dimensions.dim20()
-                            : dimensions.sp20() + -cardOffset * 10,
+                        fontSize:
+                            pos != 0 ? dimensions.dim20() : dimensions.sp20() + -cardOffset * 10,
                         color: Colors.grey[300],
                         fontWeight: FontWeight.bold,
                       ),
@@ -432,9 +395,8 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                     child: Text(
                       question?.answers[0] ?? '',
                       style: TextStyle(
-                        fontSize: pos > listOfCompletedQuiz.length
-                            ? dimensions.dim20()
-                            : dimensions.sp20() + -cardOffset * 10,
+                        fontSize:
+                            pos != 0 ? dimensions.dim20() : dimensions.sp20() + -cardOffset * 10,
                         color: Colors.grey[400],
                         fontWeight: FontWeight.bold,
                       ),
@@ -469,7 +431,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
               height: dimensions.dim350(),
               highlightColor: Colors.green[50],
               hoverColor: Colors.green[100],
-              color: pos > listOfCompletedQuiz.length
+              color: pos != 0
                   ? Colors.transparent
                   : cardOffset.isNegative
                       ? Colors.transparent
@@ -487,9 +449,8 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                     child: Text(
                       ' >',
                       style: TextStyle(
-                        fontSize: pos > listOfCompletedQuiz.length
-                            ? dimensions.dim20()
-                            : dimensions.sp20() + cardOffset * 10,
+                        fontSize:
+                            pos != 0 ? dimensions.dim20() : dimensions.sp20() + cardOffset * 10,
                         color: Colors.grey[300],
                         fontWeight: FontWeight.bold,
                       ),
@@ -501,9 +462,8 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                     child: Text(
                       question?.answers[1] ?? '',
                       style: TextStyle(
-                        fontSize: pos > listOfCompletedQuiz.length
-                            ? dimensions.dim20()
-                            : dimensions.sp20() + cardOffset * 10,
+                        fontSize:
+                            pos != 0 ? dimensions.dim20() : dimensions.sp20() + cardOffset * 10,
                         color: Colors.grey[400],
                         fontWeight: FontWeight.bold,
                       ),
@@ -705,7 +665,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
     }
   }
 
-  Widget _buildFinishQuiz(dynamic state, bool _completed) {
+  Widget _buildFinishQuiz(dynamic state) {
     return AnimatedBuilder(
       animation: finishQuizAnimController,
       builder: (context, _pos) {
@@ -833,9 +793,10 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                             ),
                           ],
                         ),
-                        // Quote
+                        // Quote and indicator
                         Stack(
                           children: [
+                            // Loading indicator
                             Opacity(
                               opacity: state is QuizPageLoadedState && state.quote == null
                                   ? finishQuizSequenceAnimation['4'].value
@@ -851,52 +812,56 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                                       child:
                                           Opacity(opacity: .4, child: CustomLoadingIndicator()))),
                             ),
+                            // Quote
                             AnimatedOpacity(
                               duration: Duration(milliseconds: 500),
                               opacity: state is QuizPageLoadedState && state.quote != null ? 1 : 0,
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  // Quote
-                                  Container(
-                                    color: Colors.purple.withOpacity(.025),
-                                    padding: EdgeInsets.symmetric(
-                                        vertical: dimensions.dim6(),
-                                        horizontal: dimensions.dim12()),
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      state is QuizPageLoadedState
-                                          ? state.quote != null
-                                              ? state.quote['quote']
-                                              : ''
-                                          : '',
-                                      style: TextStyle(
-                                          color: Colors.white, fontSize: dimensions.sp16()),
-                                      textAlign: TextAlign.center,
+                              child: Opacity(
+                                opacity: finishQuizSequenceAnimation['4'].value,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    // Quote
+                                    Container(
+                                      color: Colors.purple.withOpacity(.025),
+                                      padding: EdgeInsets.symmetric(
+                                          vertical: dimensions.dim6(),
+                                          horizontal: dimensions.dim12()),
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        state is QuizPageLoadedState
+                                            ? state.quote != null
+                                                ? state.quote['quote'] ?? ''
+                                                : ''
+                                            : '',
+                                        style: TextStyle(
+                                            color: Colors.white, fontSize: dimensions.sp16()),
+                                        textAlign: TextAlign.center,
+                                      ),
                                     ),
-                                  ),
-                                  // Author
-                                  Container(
-                                    // color: Colors.orange.withOpacity(.1),
-                                    padding: EdgeInsets.symmetric(
-                                        vertical: dimensions.dim6(),
-                                        horizontal: dimensions.dim16()),
-                                    alignment: Alignment.centerRight,
-                                    child: Text(
-                                      state is QuizPageLoadedState
-                                          ? state.quote != null
-                                              ? state.quote['authors']
-                                              : ''
-                                          : '',
-                                      style: TextStyle(
-                                          color: Colors.red.withOpacity(.5),
-                                          fontSize: dimensions.sp16(),
-                                          fontWeight: FontWeight.bold),
-                                      textAlign: TextAlign.center,
+                                    // Author
+                                    Container(
+                                      // color: Colors.orange.withOpacity(.1),
+                                      padding: EdgeInsets.symmetric(
+                                          vertical: dimensions.dim6(),
+                                          horizontal: dimensions.dim16()),
+                                      alignment: Alignment.centerRight,
+                                      child: Text(
+                                        state is QuizPageLoadedState
+                                            ? state.quote != null
+                                                ? state.quote['authors'] ?? ''
+                                                : ''
+                                            : '',
+                                        style: TextStyle(
+                                            color: Colors.red.withOpacity(.5),
+                                            fontSize: dimensions.sp16(),
+                                            fontWeight: FontWeight.bold),
+                                        textAlign: TextAlign.center,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           ],
@@ -1015,9 +980,13 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
     finishQuizAnimController
       ..reset()
       ..dispose();
-    // compQuestionAnimController
-    //   ..reset()
-    //   ..dispose();
+
+    completedQuizControllers.forEach((_animC) {
+      _animC
+        ..reset()
+        ..dispose();
+    });
+
     timer?.cancel();
     pageViewController?.dispose();
     super.dispose();
@@ -1027,28 +996,8 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
   Widget _buildResultQuestion(BuildContext context, int pos, dynamic state) {
     Question _q = state.mainBook.completedQuiz[pos];
 
-    var _compQuestionAnimController = AnimationController(vsync: this);
-    var _compQuestionSequenceAnimation = SequenceAnimationBuilder()
-        .addAnimatable(
-        animatable: Tween<double>(begin: dimensions.dim80(), end: dimensions.dim180()),
-        from: Duration.zero,
-        to: Duration(milliseconds: 300),
-        tag: '1')
-        .addAnimatable(
-        animatable: Tween<double>(begin: dimensions.dim40(), end: dimensions.dim60()),
-        from: Duration(milliseconds: 200),
-        to: Duration(milliseconds: 400),
-        tag: '2')
-        .addAnimatable(
-        animatable: Tween<double>(begin: 0.0, end: dimensions.dim100()),
-        from: Duration(milliseconds: 300),
-        to: Duration(milliseconds: 600),
-        tag: '3')
-        .animate(_compQuestionAnimController);
-
-
     return AnimatedBuilder(
-      animation: _compQuestionAnimController,
+      animation: completedQuizControllers[pos],
       builder: (context, _pos) {
         return Container(
           alignment: Alignment.topCenter,
@@ -1062,7 +1011,9 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                 child: Text(
                   (pos + 1).toString(),
                   style: TextStyle(
-                      color: Colors.white, fontSize: dimensions.sp20(), fontWeight: FontWeight.bold),
+                      color: Colors.white,
+                      fontSize: dimensions.sp20(),
+                      fontWeight: FontWeight.bold),
                 ),
               ),
 
@@ -1070,19 +1021,17 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
               Expanded(
                 child: GestureDetector(
                   onTap: () async {
-
                     if (_q.expanded) {
                       _q.expanded = false;
-                      await _compQuestionAnimController.reverse();
+                      await completedQuizControllers[pos].reverse();
                     } else {
                       _q.expanded = true;
-                      await _compQuestionAnimController.forward();
+                      await completedQuizControllers[pos].forward();
                     }
                   },
-
                   child: Container(
                     width: MediaQuery.of(context).size.width - dimensions.dim80(),
-                    height: _compQuestionSequenceAnimation['1'].value,
+                    height: completedQuizSequenceAnim[pos]['1'].value,
                     margin: EdgeInsets.only(right: dimensions.dim16(), left: dimensions.dim12()),
                     decoration: ShapeDecoration(
                         shape: RoundedRectangleBorder(
@@ -1100,8 +1049,8 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                           child: Row(
                             children: [
                               Container(
-                                  margin:
-                                  EdgeInsets.only(left: dimensions.dim12(), top: dimensions.dim4()),
+                                  margin: EdgeInsets.only(
+                                      left: dimensions.dim12(), top: dimensions.dim4()),
                                   child: Text('Q: ',
                                       style: TextStyle(
                                           color: Colors.purple[300], fontSize: dimensions.sp15()))),
@@ -1109,13 +1058,17 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                                 width: MediaQuery.of(context).size.width - dimensions.dim90(),
                                 margin: EdgeInsets.only(top: dimensions.dim2()),
                                 padding: EdgeInsets.symmetric(horizontal: dimensions.dim4()),
-                                height: _compQuestionSequenceAnimation['2'].value,
+                                height: completedQuizSequenceAnim[pos]['2'].value,
                                 alignment: Alignment.center,
                                 child: Text(
-                                  'Ronakdlk awjdlkwajkl djawlkda awdl lkawjdlkw kal djklwdk alwkdjlwkaj lkaw lkdjwalkjdlkwajlkdj lkjawlkdjklwjd kljkawkljdl',
-                                  // _q.question,
-                                  style: TextStyle(color: Colors.white, fontSize: dimensions.sp15()),
-                                  maxLines: _compQuestionSequenceAnimation['2'].value != dimensions.dim40() ? 4 : 2,
+                                  // 'Ronakdlk awjdlkwajkl djawlkda awdl lkawjdlkw kal djklwdk alwkdjlwkaj lkaw lkdjwalkjdlkwajlkdj lkjawlkdjklwjd kljkawkljdl',
+                                  _q.question,
+                                  style:
+                                      TextStyle(color: Colors.white, fontSize: dimensions.sp15()),
+                                  maxLines: completedQuizSequenceAnim[pos]['2'].value !=
+                                          dimensions.dim40()
+                                      ? 4
+                                      : 2,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
@@ -1124,35 +1077,37 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                         ),
 
                         Stack(
+                          fit: StackFit.loose,
                           children: [
                             // LONG Answers, time taken, other shit
                             Container(
-                              height: _compQuestionSequenceAnimation['3'].value,
+                              height: completedQuizSequenceAnim[pos]['3'].value == 0.0 ? dimensions.dim20() : dimensions.dim20() * (4 + completedQuizSequenceAnim[pos]['3'].value),
                               child: Opacity(
-                                opacity: _compQuestionSequenceAnimation['3'].value == 0 ? 0 : _compQuestionSequenceAnimation['3'].value / dimensions.dim100(),
+                                opacity: completedQuizSequenceAnim[pos]['3'].value,
                                 child: Column(
                                   children: List.generate(_q.answers.length, (i) {
                                     return Row(
                                       children: [
                                         Container(
-                                            margin: EdgeInsets.only(left: dimensions.dim12(), right: dimensions.dim8(), top: dimensions.dim6() * (_compQuestionSequenceAnimation['3'].value / dimensions.dim100())),
+                                            margin: EdgeInsets.only(
+                                                left: dimensions.dim12(),
+                                                right: dimensions.dim8(),
+                                                top: dimensions.dim6()),
                                             child: Text(
-                                              '${i+1}.',
+                                              '${i + 1}.',
                                               style: TextStyle(
                                                   color: Colors.purple[300],
-                                                  fontSize: dimensions.sp14() * (_compQuestionSequenceAnimation['3'].value / dimensions.dim100()),
-                                                  fontWeight: FontWeight.bold
-                                              ),
-                                            )
-                                        ),
+                                                  fontSize: dimensions.sp14() * completedQuizSequenceAnim[pos]['4'].value,
+                                                  fontWeight: FontWeight.bold),
+                                            )),
                                         Container(
-                                          margin: EdgeInsets.only(top: dimensions.dim6() * (_compQuestionSequenceAnimation['3'].value / dimensions.dim100())),
+                                          margin: EdgeInsets.only(
+                                              top: dimensions.dim6() * completedQuizSequenceAnim[pos]['4'].value),
                                           child: Text(
                                             _q.answers[i],
                                             style: TextStyle(
                                                 color: Colors.white,
-                                                fontSize: dimensions.sp14() * (_compQuestionSequenceAnimation['3'].value / dimensions.dim100())
-                                            ),
+                                                fontSize: dimensions.sp14() * completedQuizSequenceAnim[pos]['4'].value),
                                           ),
                                         )
                                       ],
@@ -1165,65 +1120,72 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                             // SHORT Answer and time taken
                             AnimatedOpacity(
                               duration: Duration(milliseconds: 200),
-                              opacity: _compQuestionSequenceAnimation['1'].value != dimensions.dim80() ? 0 : 1,
-                              child: Row(
-                                children: [
-                                  // Answer
-                                  Expanded(
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          margin: EdgeInsets.only(
-                                              top: dimensions.dim2(),
-                                              left: dimensions.dim12(),
-                                              right: dimensions.dim2()),
-                                          child: Text(
-                                            'A: ',
-                                            style: TextStyle(
-                                                color: Colors.purple[300], fontSize: dimensions.sp15()),
+                              opacity:
+                                  completedQuizSequenceAnim[pos]['1'].value != dimensions.dim80()
+                                      ? 0
+                                      : 1,
+                              child: Container(
+                                height: dimensions.dim20() * (1 - (completedQuizSequenceAnim[pos]['3'].value)),
+                                child: Row(
+                                  children: [
+                                    // Answer
+                                    Expanded(
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            margin: EdgeInsets.only(
+                                                top: dimensions.dim2(),
+                                                left: dimensions.dim12(),
+                                                right: dimensions.dim2()),
+                                            child: Text(
+                                              'A: ',
+                                              style: TextStyle(
+                                                  color: Colors.purple[300],
+                                                  fontSize: dimensions.sp15() * (1 - completedQuizSequenceAnim[pos]['3'].value)),
+                                            ),
                                           ),
-                                        ),
-                                        Container(
-                                          width: dimensions.dim80(),
-                                          margin: EdgeInsets.only(
-                                              top: dimensions.dim2(),
-                                              left: dimensions.dim12(),
-                                              right: dimensions.dim2()),
-                                          child: Text(
-                                            _q.answered,
-                                            style: TextStyle(
-                                                color: Colors.white, fontSize: dimensions.sp14()),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
+                                          Container(
+                                            width: dimensions.dim80(),
+                                            margin: EdgeInsets.only(
+                                                top: dimensions.dim2() * (1 - completedQuizSequenceAnim[pos]['3'].value),
+                                                left: dimensions.dim12(),
+                                                right: dimensions.dim2()),
+                                            child: Text(
+                                              _q.answered,
+                                              style: TextStyle(
+                                                  color: Colors.white, fontSize: dimensions.sp14() * (1 - completedQuizSequenceAnim[pos]['3'].value)),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
                                           ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
-                                  ),
 
-                                  // Time taken
-                                  Container(
-                                    margin: EdgeInsets.only(
-                                        top: dimensions.dim2(),
-                                        left: dimensions.dim12(),
-                                        right: dimensions.dim6()),
-                                    child: Icon(
-                                      Icons.av_timer_sharp,
-                                      color: Colors.black54,
-                                      size: dimensions.dim18(),
+                                    // Time taken
+                                    Container(
+                                      margin: EdgeInsets.only(
+                                          top: dimensions.dim2(),
+                                          left: dimensions.dim12(),
+                                          right: dimensions.dim6()),
+                                      child: Icon(
+                                        Icons.av_timer_sharp,
+                                        color: Colors.black54,
+                                        size: dimensions.dim18(),
+                                      ),
                                     ),
-                                  ),
-                                  Container(
-                                    margin: EdgeInsets.only(
-                                        top: dimensions.dim4(),
-                                        left: dimensions.dim4(),
-                                        right: dimensions.dim24()),
-                                    child: Text(
-                                        '${_buildMinutes(_q.timeTaken)}:${_buildSeconds(_q.timeTaken)}',
-                                        style: TextStyle(
-                                            color: Colors.white, fontSize: dimensions.sp12())),
-                                  ),
-                                ],
+                                    Container(
+                                      margin: EdgeInsets.only(
+                                          top: dimensions.dim4(),
+                                          left: dimensions.dim4(),
+                                          right: dimensions.dim24()),
+                                      child: Text(
+                                          '${_buildMinutes(_q.timeTaken)}:${_buildSeconds(_q.timeTaken)}',
+                                          style: TextStyle(
+                                              color: Colors.white, fontSize: dimensions.sp12())),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ],
@@ -1238,5 +1200,66 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
         );
       },
     );
+  }
+
+  void _initControllers() {
+    int _start = 0;
+
+    // For finish anim screen
+    finishQuizAnimController = AnimationController(vsync: this);
+    finishQuizSequenceAnimation = SequenceAnimationBuilder()
+        .addAnimatable(
+        animatable: Tween(begin: 0.0, end: 1.0),
+        from: Duration.zero,
+        to: Duration(milliseconds: 800),
+        tag: '1')
+        .addAnimatable(
+        animatable: Tween(begin: 0.0, end: 1.0),
+        from: Duration(milliseconds: 700),
+        to: Duration(milliseconds: 1000),
+        tag: '2')
+        .addAnimatable(
+        animatable: Tween(begin: 0.0, end: 1.0),
+        from: Duration(milliseconds: 900),
+        to: Duration(milliseconds: 1200),
+        tag: '3')
+        .addAnimatable(
+        animatable: Tween(begin: 0.0, end: 1.0),
+        from: Duration(milliseconds: 1100),
+        to: Duration(milliseconds: 1400),
+        tag: '4')
+        .animate(finishQuizAnimController);
+
+    // For each question create new controller
+    do {
+      _start += 1;
+
+      var _compQuestionAnimController = AnimationController(vsync: this);
+      var _compQuestionSequenceAnimation = SequenceAnimationBuilder()
+          .addAnimatable(
+              animatable: Tween<double>(begin: dimensions.dim80(), end: dimensions.dim180()),
+              from: Duration.zero,
+              to: Duration(milliseconds: 200),
+              tag: '1')
+          .addAnimatable(
+              animatable: Tween<double>(begin: dimensions.dim40(), end: dimensions.dim60()),
+              from: Duration(milliseconds: 300),
+              to: Duration(milliseconds: 500),
+              tag: '2')
+          .addAnimatable(
+              animatable: Tween<double>(begin: 0.0, end: 1.0),
+              from: Duration(milliseconds: 500),
+              to: Duration(milliseconds: 700),
+              tag: '3')
+          .addAnimatable(
+              animatable: Tween<double>(begin: 0.0, end: 1.0),
+              from: Duration(milliseconds: 800),
+              to: Duration(milliseconds: 1000),
+              tag: '4')
+          .animate(_compQuestionAnimController);
+
+      completedQuizControllers.add(_compQuestionAnimController);
+      completedQuizSequenceAnim.add(_compQuestionSequenceAnimation);
+    } while (_start <= widget.mainBook.questionsLength);
   }
 }
