@@ -14,6 +14,13 @@ final String emailProvider = 'EMAIL';
 final int usernameMinLength = 3;
 final int usernameMaxLength = 16;
 
+final int minQuestionLength = 15;
+final int maxQuestionLength = 120;
+
+
+final int maxAnswerLength = 40;
+
+
 // ERROR MESSAGES
 String duplicateEmailError = 'Account with current email already exists.';
 String usernameWhitespaceError = 'No whitespaces allowed';

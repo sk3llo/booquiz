@@ -34,8 +34,6 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
   TextEditingController _answer3Controller = TextEditingController();
   TextEditingController _answer4Controller = TextEditingController();
 
-  int minQuestionLength = 15;
-
   String _answer1HintText = 'Yes';
   String _answer2HintText = 'No';
 
@@ -270,7 +268,7 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                                 border: InputBorder.none,
                               ),
                               maxLines: 3,
-                              maxLength: 120,
+                              maxLength: maxQuestionLength,
                             ),
                           ),
                         ],
@@ -360,7 +358,7 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                                 border: InputBorder.none,
                               ),
                               maxLines: 1,
-                              maxLength: 40,
+                              maxLength: maxAnswerLength,
                             ),
                           ),
 
@@ -471,7 +469,7 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                               border: InputBorder.none,
                             ),
                             maxLines: 1,
-                            maxLength: 40,
+                            maxLength: maxAnswerLength,
                           ),
 
                           // Right answer picker
@@ -626,7 +624,7 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                                           border: InputBorder.none,
                                         ),
                                         maxLines: 1,
-                                        maxLength: 40,
+                                        maxLength: maxAnswerLength,
                                       ),
 
                                       // Right answer picker
@@ -812,7 +810,7 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                                           border: InputBorder.none,
                                         ),
                                         maxLines: 1,
-                                        maxLength: 40,
+                                        maxLength: maxAnswerLength,
                                       ),
 
                                       // Right answer picker

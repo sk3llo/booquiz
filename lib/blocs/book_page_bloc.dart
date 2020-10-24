@@ -26,13 +26,14 @@ class BookPageLoadDetailsEvent extends BookPageEvents {
   List<Object> get props => [book];
 }
 
-class BookPageNewQuestionAddedEvent extends BookPageEvents {
-  final UserBook book;
+class BookPageUpdateEvent extends BookPageEvents {
+  final MainBook mainBook;
+  final UserBook userBook;
 
-  BookPageNewQuestionAddedEvent(this.book);
+  BookPageUpdateEvent(this.mainBook, this.userBook);
 
   @override
-  List<Object> get props => [book];
+  List<Object> get props => [mainBook, userBook];
 }
 
 /// STATES
@@ -75,8 +76,9 @@ class BookPageBloc extends Bloc<BookPageEvents, BookPageStates> {
   @override
   Stream<BookPageStates> mapEventToState(BookPageEvents event) async* {
 
-    if (event is BookPageNewQuestionAddedEvent) {
-
+    if (event is BookPageUpdateEvent) {
+      yield BookPageLoadingState();
+      yield BookPageLoadedState(event.mainBook, event.userBook);
     }
 
     if (event is BookPageLoadDetailsEvent) {

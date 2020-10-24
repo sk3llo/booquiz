@@ -46,32 +46,52 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
 
   AnimationController finishQuizAnimController;
   SequenceAnimation finishQuizSequenceAnimation;
+  // AnimationController compQuestionAnimController;
+  // SequenceAnimation compQuestionSequenceAnimation;
 
   @override
   void initState() {
     finishQuizAnimController = AnimationController(vsync: this);
     finishQuizSequenceAnimation = SequenceAnimationBuilder()
         .addAnimatable(
-        animatable: Tween(begin: 0.0, end: 1.0),
-        from: Duration.zero,
-        to: Duration(milliseconds: 800),
-        tag: '1')
+            animatable: Tween(begin: 0.0, end: 1.0),
+            from: Duration.zero,
+            to: Duration(milliseconds: 800),
+            tag: '1')
         .addAnimatable(
-        animatable: Tween(begin: 0.0, end: 1.0),
-        from: Duration(milliseconds: 700),
-        to: Duration(milliseconds: 1000),
-        tag: '2')
+            animatable: Tween(begin: 0.0, end: 1.0),
+            from: Duration(milliseconds: 700),
+            to: Duration(milliseconds: 1000),
+            tag: '2')
         .addAnimatable(
-        animatable: Tween(begin: 0.0, end: 1.0),
-        from: Duration(milliseconds: 900),
-        to: Duration(milliseconds: 1200),
-        tag: '3')
+            animatable: Tween(begin: 0.0, end: 1.0),
+            from: Duration(milliseconds: 900),
+            to: Duration(milliseconds: 1200),
+            tag: '3')
         .addAnimatable(
-        animatable: Tween(begin: 0.0, end: 1.0),
-        from: Duration(milliseconds: 1100),
-        to: Duration(milliseconds: 1400),
-        tag: '4')
+            animatable: Tween(begin: 0.0, end: 1.0),
+            from: Duration(milliseconds: 1100),
+            to: Duration(milliseconds: 1400),
+            tag: '4')
         .animate(finishQuizAnimController);
+    // compQuestionAnimController = AnimationController(vsync: this);
+    // compQuestionSequenceAnimation = SequenceAnimationBuilder()
+    //     .addAnimatable(
+    //         animatable: Tween<double>(begin: dimensions.dim80(), end: dimensions.dim180()),
+    //         from: Duration.zero,
+    //         to: Duration(milliseconds: 300),
+    //         tag: '1')
+    //     .addAnimatable(
+    //         animatable: Tween<double>(begin: dimensions.dim40(), end: dimensions.dim60()),
+    //         from: Duration(milliseconds: 200),
+    //         to: Duration(milliseconds: 400),
+    //         tag: '2')
+    //     .addAnimatable(
+    //         animatable: Tween<double>(begin: 0.0, end: dimensions.dim100()),
+    //         from: Duration(milliseconds: 300),
+    //         to: Duration(milliseconds: 600),
+    //         tag: '3')
+    //     .animate(compQuestionAnimController);
 
     // Remove completed
     if (widget.mainBook.quiz.isNotEmpty)
@@ -91,9 +111,9 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
       bloc: quizPageBloc,
       builder: (context, state) {
         bool _completedQuiz = state is QuizPageLoadedState &&
-            state.userBook != null &&
-            state.mainBook != null &&
-            state.userBook.questionsCompleted == state.mainBook.questionsLength ||
+                state.userBook != null &&
+                state.mainBook != null &&
+                state.userBook.questionsCompleted == state.mainBook.questionsLength ||
             state is QuizPageEmptyState &&
                 state.userBook != null &&
                 state.mainBook != null &&
@@ -154,196 +174,204 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
             ),
             extendBodyBehindAppBar: true,
             body: Container(
-              height: MediaQuery
-                  .of(context)
-                  .size
-                  .height,
-              width: MediaQuery
-                  .of(context)
-                  .size
-                  .width,
+              height: MediaQuery.of(context).size.height,
+              width: MediaQuery.of(context).size.width,
               decoration: BoxDecoration(
                   gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Colors.deepOrange[200],
-                        Colors.deepOrange[200],
-                        Colors.deepOrange[100],
-                        Colors.orange[100],
-                      ])),
+                    Colors.deepOrange[200],
+                    Colors.deepOrange[200],
+                    Colors.deepOrange[100],
+                    Colors.orange[100],
+                  ])),
               child: Container(
                   alignment: Alignment.center,
                   child: Column(
                     children: <Widget>[
                       Container(
-                        margin: EdgeInsets.only(top: dimensions.dim80()),
-                        padding: EdgeInsets.only(top: dimensions.dim6()),
-                        height: dimensions.dim40(),
-                        alignment: Alignment.topCenter,
-                        child: AnimatedOpacity(
-                          duration: Duration(milliseconds: 600),
-                          opacity:
-                          widget.userBook.questionsCompleted == widget.mainBook.questionsLength
-                              ? 0
-                              : 1,
-                          child: Text(
-                            'Question ${widget.userBook.questionsCompleted == widget.mainBook
-                                .questionsLength ? widget.userBook.questionsCompleted : widget
-                                .userBook.questionsCompleted + 1} / ${widget.mainBook
-                                .questionsLength}',
-                            style: TextStyle(fontSize: dimensions.sp14(), color: Colors.white),
-                          ),
+                        height: dimensions.dim120(),
+                        child: Stack(
+                          alignment: Alignment.bottomCenter,
+                          children: [
+                            Container(
+                              padding: EdgeInsets.only(top: dimensions.dim6()),
+                              height: dimensions.dim80(),
+                              alignment: Alignment.center,
+                              child: AnimatedOpacity(
+                                duration: Duration(milliseconds: 600),
+                                opacity: widget.userBook.questionsCompleted ==
+                                        widget.mainBook.questionsLength
+                                    ? 0
+                                    : 1,
+                                child: Text(
+                                  'Question ${widget.userBook.questionsCompleted == widget.mainBook.questionsLength ? widget.userBook.questionsCompleted : widget.userBook.questionsCompleted + 1} / ${widget.mainBook.questionsLength}',
+                                  style:
+                                      TextStyle(fontSize: dimensions.sp14(), color: Colors.white),
+                                ),
+                              ),
+                            ),
+                            AnimatedContainer(
+                              duration: Duration(milliseconds: 400),
+                              height: dimensions.dim80(),
+                              width: MediaQuery.of(context).size.width,
+                              alignment: Alignment.bottomCenter,
+                              child: _completedQuiz && showResults
+                                  ? MaterialButton(
+                                      onPressed: () {},
+                                      child: Text(
+                                        'Expand All',
+                                        style: TextStyle(
+                                            color: Colors.purple[300], fontSize: dimensions.sp15()),
+                                      ),
+                                    )
+                                  : Container(),
+                            ),
+                          ],
                         ),
                       ),
                       Expanded(
                           child: Stack(
-//                        fit: StackFit.loose,
-                            alignment: Alignment.center,
-                            children: <Widget>[
-                              _buildFinishQuiz(state, _completedQuiz),
-                              AnimatedPositioned(
-                                duration: Duration(milliseconds: 400),
-                                height: MediaQuery
-                                    .of(context)
-                                    .size
-                                    .height,
-                                width: MediaQuery
-                                    .of(context)
-                                    .size
-                                    .width,
-                                child: Container(
-                                  margin: EdgeInsets.only(bottom: dimensions.dim40()),
-                                  child: QuizSwipeCard(
-                                      minWidth: dimensions.dim200(),
-                                      minHeight: dimensions.dim400(),
-                                      maxHeight: dimensions.dim500(),
-                                      maxWidth: MediaQuery
-                                          .of(context)
-                                          .size
-                                          .width,
-                                      allowVerticalMovement: false,
-                                      stackNum: 3,
-                                      totalNum: state is QuizPageLoadedState ||
+                        alignment: Alignment.center,
+                        children: <Widget>[
+                          // Finish quiz screen
+                          _buildFinishQuiz(state, _completedQuiz),
+
+                          // Main cards
+                          AnimatedPositioned(
+                            duration: Duration(milliseconds: 400),
+                            height: _completedQuiz ? 0 : MediaQuery.of(context).size.height,
+                            width: _completedQuiz ? 0 : MediaQuery.of(context).size.width,
+                            child: Container(
+                              margin: EdgeInsets.only(bottom: dimensions.dim40()),
+                              child: QuizSwipeCard(
+                                  minWidth: dimensions.dim200(),
+                                  minHeight: dimensions.dim400(),
+                                  maxHeight: dimensions.dim500(),
+                                  maxWidth: MediaQuery.of(context).size.width,
+                                  allowVerticalMovement: false,
+                                  stackNum: 3,
+                                  totalNum: state is QuizPageLoadedState ||
                                           state is QuizPageEmptyState &&
                                               state.mainBook != null &&
                                               state.mainBook.quiz.isNotEmpty
-                                          ? state.mainBook.quiz.length
-                                          : widget.mainBook.quiz.length,
-                                      allQuiz: state is QuizPageLoadedState &&
+                                      ? state.mainBook.quiz.length
+                                      : widget.mainBook.quiz.length,
+                                  allQuiz: state is QuizPageLoadedState &&
                                           state.mainBook != null &&
                                           state.mainBook.quiz.isNotEmpty
-                                          ? state.mainBook.quiz
-                                          : widget.mainBook.quiz,
-                                      cardController: cardController,
-                                      onDragEnd: () {
-                                        setState(() {
-                                          cardOffset = 0;
-                                        });
-                                      },
-                                      swipeCompleteCallback: (_or, pos) {
-                                        // If swiped trigger bloc
-                                        if (_or == CardSwipeOrientation.LEFT ||
-                                            _or == CardSwipeOrientation.RIGHT)
-                                          _pickAnAnswer(widget.mainBook.quiz[pos], orintation: _or);
-                                        else {
-                                          setState(() {
-                                            selectedAnswerPos = -1;
-                                          });
-                                        }
-                                      },
-                                      swipeUpdateCallback: (_details, _alignment) {
-                                        cardOffset = _alignment.x / 8;
-                                        if (cardOffset > 25) cardOffset = 25.0;
-                                        setState(() {});
-                                      },
-                                      likeButton: FloatingActionButton(
-                                        shape: CircleBorder(
+                                      ? state.mainBook.quiz
+                                      : widget.mainBook.quiz,
+                                  cardController: cardController,
+                                  onDragEnd: () {
+                                    setState(() {
+                                      cardOffset = 0;
+                                    });
+                                  },
+                                  swipeCompleteCallback: (_or, pos) {
+                                    // If swiped trigger bloc
+                                    if (_or == CardSwipeOrientation.LEFT ||
+                                        _or == CardSwipeOrientation.RIGHT)
+                                      _pickAnAnswer(widget.mainBook.quiz[pos], orintation: _or);
+                                    else {
+                                      setState(() {
+                                        selectedAnswerPos = -1;
+                                      });
+                                    }
+                                  },
+                                  swipeUpdateCallback: (_details, _alignment) {
+                                    cardOffset = _alignment.x / 8;
+                                    if (cardOffset > 25) cardOffset = 25.0;
+                                    setState(() {});
+                                  },
+                                  likeButton: FloatingActionButton(
+                                    shape: CircleBorder(
+                                        side: BorderSide(color: Colors.white54, width: 2)),
+                                    backgroundColor: Colors.deepOrange[100],
+                                    splashColor: Colors.green[300],
+                                    onPressed: () {
+                                      print(timer.tick * 1000);
+                                    },
+                                    highlightElevation: 0,
+                                    focusElevation: 0,
+                                    elevation: 0,
+                                    heroTag: 'zhzhzh',
+                                    child: Icon(
+                                      Icons.thumb_up,
+                                    ),
+                                  ),
+                                  dislikeButton: FloatingActionButton(
+                                    shape: CircleBorder(
+                                        side: BorderSide(color: Colors.white54, width: 2)),
+                                    backgroundColor: Colors.deepOrange[100],
+                                    splashColor: Colors.redAccent[200],
+                                    onPressed: () {},
+                                    highlightElevation: 0,
+                                    focusElevation: 0,
+                                    elevation: 0,
+                                    heroTag: 'hzhzhz',
+                                    child: Icon(Icons.thumb_down),
+                                  ),
+                                  cardBuilder: (context, pos) {
+                                    return Container(
+                                      decoration: ShapeDecoration(
+                                        color: Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.all(
+                                                Radius.circular(dimensions.dim24())),
                                             side: BorderSide(color: Colors.white54, width: 2)),
-                                        backgroundColor: Colors.deepOrange[100],
-                                        splashColor: Colors.green[300],
-                                        onPressed: () {
-                                          print(timer.tick * 1000);
-                                        },
-                                        highlightElevation: 0,
-                                        focusElevation: 0,
-                                        elevation: 0,
-                                        heroTag: 'zhzhzh',
-                                        child: Icon(
-                                          Icons.thumb_up,
-                                        ),
                                       ),
-                                      dislikeButton: FloatingActionButton(
-                                        shape: CircleBorder(
-                                            side: BorderSide(color: Colors.white54, width: 2)),
-                                        backgroundColor: Colors.deepOrange[100],
-                                        splashColor: Colors.redAccent[200],
-                                        onPressed: () {},
-                                        highlightElevation: 0,
-                                        focusElevation: 0,
-                                        elevation: 0,
-                                        heroTag: 'hzhzhz',
-                                        child: Icon(Icons.thumb_down),
-                                      ),
-                                      cardBuilder: (context, pos) {
-                                        return Container(
-                                          decoration: ShapeDecoration(
-                                            color: Colors.white,
-                                            shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.all(
-                                                    Radius.circular(dimensions.dim24())),
-                                                side: BorderSide(color: Colors.white54, width: 2)),
-                                          ),
-                                          child: Column(
-                                            children: <Widget>[
-                                              // Main question
-                                              Container(
-                                                height: dimensions.dim160(),
-                                                padding: EdgeInsets.symmetric(
-                                                    horizontal: dimensions.dim46()),
+                                      child: Column(
+                                        children: <Widget>[
+                                          // Main question
+                                          Container(
+                                            height: dimensions.dim160(),
+                                            padding: EdgeInsets.symmetric(
+                                                horizontal: dimensions.dim46()),
 //                                        margin: EdgeInsets.only(bottom: dimensions.dim20()),
-                                                alignment: Alignment.center,
-                                                decoration: ShapeDecoration(
-                                                    color: Colors.deepOrange[200].withOpacity(.6),
-                                                    shape: RoundedRectangleBorder(
-                                                        borderRadius: BorderRadius.only(
-                                                            bottomRight:
+                                            alignment: Alignment.center,
+                                            decoration: ShapeDecoration(
+                                                color: Colors.deepOrange[200].withOpacity(.6),
+                                                shape: RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.only(
+                                                        bottomRight:
                                                             Radius.circular(dimensions.dim45()),
-                                                            bottomLeft:
+                                                        bottomLeft:
                                                             Radius.circular(dimensions.dim45()),
-                                                            topLeft:
+                                                        topLeft:
                                                             Radius.circular(dimensions.dim20()),
-                                                            topRight:
+                                                        topRight:
                                                             Radius.circular(dimensions.dim20())),
-                                                        side: BorderSide(
-                                                            color:
+                                                    side: BorderSide(
+                                                        color:
                                                             Colors.orange[400].withOpacity(.5)))),
-                                                child: Text(
-                                                  state is QuizPageLoadedState ||
+                                            child: Text(
+                                              state is QuizPageLoadedState ||
                                                       state is QuizPageEmptyState &&
                                                           state.mainBook != null &&
                                                           state.mainBook.quiz.isNotEmpty
-                                                      ? state.mainBook.quiz[pos].question
-                                                      : widget.mainBook.quiz[pos].question,
-                                                  style: TextStyle(
-                                                      color: loginTextColor,
-                                                      fontSize: dimensions.sp20(),
-                                                      fontWeight: FontWeight.w600,
-                                                      wordSpacing: 2,
-                                                      height: 1.5),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                              ),
-
-                                              buildShit(state, pos)
-                                            ],
+                                                  ? state.mainBook.quiz[pos].question
+                                                  : widget.mainBook.quiz[pos].question,
+                                              style: TextStyle(
+                                                  color: loginTextColor,
+                                                  fontSize: dimensions.sp20(),
+                                                  fontWeight: FontWeight.w600,
+                                                  wordSpacing: 2,
+                                                  height: 1.5),
+                                              textAlign: TextAlign.center,
+                                            ),
                                           ),
-                                        );
-                                      }),
-                                ),
-                              ),
-                            ],
-                          )),
+
+                                          buildShit(state, pos)
+                                        ],
+                                      ),
+                                    );
+                                  }),
+                            ),
+                          ),
+                        ],
+                      )),
                     ],
                   )),
             ));
@@ -353,10 +381,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
 
   Widget _buildYesNoCard(Question question, dynamic state, int pos) {
     return Container(
-      width: MediaQuery
-          .of(context)
-          .size
-          .width,
+      width: MediaQuery.of(context).size.width,
       padding: EdgeInsets.only(top: dimensions.dim8()),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -377,9 +402,9 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
               highlightColor: Colors.blue[50],
               color: cardOffset.isNegative
                   ? pos == 0 ||
-                  widget.mainBook.questionsLength - widget.userBook.questionsCompleted == 1
-                  ? Colors.blue[200].withOpacity(cardOffset.abs() > 1 ? 1 : cardOffset.abs())
-                  : Colors.transparent
+                          widget.mainBook.questionsLength - widget.userBook.questionsCompleted == 1
+                      ? Colors.blue[200].withOpacity(cardOffset.abs() > 1 ? 1 : cardOffset.abs())
+                      : Colors.transparent
                   : Colors.transparent,
               elevation: 0,
               focusElevation: 0,
@@ -439,7 +464,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
               },
               shape: RoundedRectangleBorder(
                   borderRadius:
-                  BorderRadius.only(bottomRight: Radius.circular(dimensions.dim24()))),
+                      BorderRadius.only(bottomRight: Radius.circular(dimensions.dim24()))),
               padding: EdgeInsets.symmetric(horizontal: dimensions.dim16()),
               height: dimensions.dim350(),
               highlightColor: Colors.green[50],
@@ -447,8 +472,8 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
               color: pos > listOfCompletedQuiz.length
                   ? Colors.transparent
                   : cardOffset.isNegative
-                  ? Colors.transparent
-                  : Colors.green[100].withOpacity(cardOffset > 1 ? 1 : cardOffset),
+                      ? Colors.transparent
+                      : Colors.green[100].withOpacity(cardOffset > 1 ? 1 : cardOffset),
               elevation: 0,
               highlightElevation: 0,
               focusElevation: 0,
@@ -518,10 +543,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
             }
           },
           child: Container(
-            width: MediaQuery
-                .of(context)
-                .size
-                .width,
+            width: MediaQuery.of(context).size.width,
             padding: EdgeInsets.symmetric(
                 horizontal: dimensions.dim16(),
                 vertical: (question.answers[_pos]).length >= 32
@@ -603,15 +625,15 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
     try {
       return Expanded(
           child: state is QuizPageLoadedState ||
-              state is QuizPageEmptyState &&
-                  state.mainBook != null &&
-                  state.mainBook.quiz.isNotEmpty
+                  state is QuizPageEmptyState &&
+                      state.mainBook != null &&
+                      state.mainBook.quiz.isNotEmpty
               ? state.mainBook.quiz[pos].answers.length > 2
-              ? _buildMultipleAnswersCard(state.mainBook.quiz[pos], state, pos)
-              : _buildYesNoCard(state.mainBook.quiz[pos], state, pos)
+                  ? _buildMultipleAnswersCard(state.mainBook.quiz[pos], state, pos)
+                  : _buildYesNoCard(state.mainBook.quiz[pos], state, pos)
               : widget.mainBook.quiz.isNotEmpty && widget.mainBook.quiz[pos].answers.length > 2
-              ? _buildMultipleAnswersCard(widget.mainBook.quiz[pos], state, pos)
-              : _buildYesNoCard(widget.mainBook.quiz[pos], state, pos));
+                  ? _buildMultipleAnswersCard(widget.mainBook.quiz[pos], state, pos)
+                  : _buildYesNoCard(widget.mainBook.quiz[pos], state, pos));
     } catch (e) {
       return Container();
     }
@@ -622,11 +644,11 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
       _timerMinutes =
           (startTimeMilliseconds / 60000 < 0 ? 0 : startTimeMilliseconds / 60000).toInt();
       _timerSeconds = (widget.userBook.totalTimeTaken / 1000 -
-          ((widget.userBook.totalTimeTaken / 60000 < 0
-              ? 0
-              : widget.userBook.totalTimeTaken / 60000)
-              .toInt() *
-              60))
+              ((widget.userBook.totalTimeTaken / 60000 < 0
+                          ? 0
+                          : widget.userBook.totalTimeTaken / 60000)
+                      .toInt() *
+                  60))
           .toInt();
       setState(() {
         _timerTime = '$_timerMinutes:${_timerSeconds < 10 ? '0$_timerSeconds' : '$_timerSeconds'}';
@@ -649,7 +671,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
 
           // Format timer string
           _timerTime =
-          '$_timerMinutes:${_timerSeconds < 10 ? '0$_timerSeconds' : '$_timerSeconds'}';
+              '$_timerMinutes:${_timerSeconds < 10 ? '0$_timerSeconds' : '$_timerSeconds'}';
         });
       }
     });
@@ -686,8 +708,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
   Widget _buildFinishQuiz(dynamic state, bool _completed) {
     return AnimatedBuilder(
       animation: finishQuizAnimController,
-      builder: (context, pos) {
-
+      builder: (context, _pos) {
         return Stack(
           alignment: Alignment.bottomCenter,
           children: [
@@ -695,69 +716,24 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
             AnimatedOpacity(
               duration: Duration(milliseconds: 500),
               opacity: showResults ? 1 : 0,
-              child: Container(
-                height: MediaQuery.of(context).size.height,
-                child: ListView.builder(
-                  itemCount: state is QuizPageLoadedState || state is QuizPageEmptyState && state.mainBook != null ? state.mainBook.completedQuiz.length : 0,
-                  itemBuilder: (context, pos) {
-
-                    Question _q = state.mainBook.completedQuiz[pos];
-
-                    // Result question
-                    return Row(
-                      children: [
-                        // Question number
-                        Container(
-                          margin: EdgeInsets.symmetric(horizontal: dimensions.dim8()),
-                          alignment: Alignment.topRight,
-                          child: Text(
-                            (pos + 1).toString(),
-                            style: TextStyle(
-                              color: Colors.black54,
-                              fontSize: dimensions.sp18(),
-                              fontWeight: FontWeight.bold
-                            ),
-                          ),
-                        ),
-
-                        Container(
-                          width: MediaQuery.of(context).size.width,
-                          height: dimensions.dim80(),
-                          margin: EdgeInsets.symmetric(horizontal: dimensions.dim18()),
-                          decoration: ShapeDecoration(
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.all(Radius.circular(16)),
-                                  side: BorderSide(
-                                      color: Colors.white
-                                  )
-                              )
-                          ),
-                          child: Column(
-                            children: [
-                              // Question
-                              Container(
-                                margin: EdgeInsets.only(top: dimensions.dim2()),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  _q.question,
-                                  style: TextStyle(
-                                      color: Colors.grey[400],
-                                      fontSize: dimensions.sp15()
-                                  ),
-                                ),
-                              ),
-
-
-
-                            ],
-                          ),
-                        ),
-                      ],
-                    );
-
-                  },
-                ),
-              ),
+              child: state is QuizPageLoadedState ||
+                      state is QuizPageEmptyState && state.mainBook != null
+                  ? Container(
+                      height: MediaQuery.of(context).size.height,
+                      alignment: Alignment.topCenter,
+                      child: ListView.builder(
+                        itemCount: state.mainBook.completedQuiz.length,
+                        padding: EdgeInsets.zero,
+                        itemBuilder: (context, pos) {
+                          // Result question
+                          return _buildResultQuestion(context, pos, state);
+                        },
+                      ),
+                    )
+                  : Container(
+                      height: MediaQuery.of(context).size.height,
+                      alignment: Alignment.center,
+                      child: CustomLoadingIndicator()),
             ),
 
             // Finish quiz
@@ -774,15 +750,11 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                       mainAxisAlignment: MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-
                         // Congrats
                         Opacity(
                           opacity: finishQuizSequenceAnimation['1'].value,
                           child: Container(
-                            width: MediaQuery
-                                .of(context)
-                                .size
-                                .width,
+                            width: MediaQuery.of(context).size.width,
                             height: dimensions.dim50(),
                             alignment: Alignment.topCenter,
                             child: Text(
@@ -795,17 +767,21 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                           ),
                         ),
                         // Image
-                        Center(child: Opacity(
-                            opacity: .75,
-                            child: Image(image: AssetImage('assets/images/finish_quiz_trophy.png'), height: dimensions.dim140(), fit: BoxFit.fill,))),
+                        Center(
+                            child: Opacity(
+                                opacity: finishQuizSequenceAnimation['1'].value > .25
+                                    ? finishQuizSequenceAnimation['1'].value - .25
+                                    : 0,
+                                child: Image(
+                                  image: AssetImage('assets/images/finish_quiz_trophy.png'),
+                                  height: dimensions.dim140(),
+                                  fit: BoxFit.fill,
+                                ))),
                         // Your Score
                         Opacity(
                           opacity: finishQuizSequenceAnimation['1'].value,
                           child: Container(
-                            width: MediaQuery
-                                .of(context)
-                                .size
-                                .width,
+                            width: MediaQuery.of(context).size.width,
                             height: dimensions.dim40(),
                             padding: EdgeInsets.symmetric(horizontal: dimensions.dim10()),
                             margin: EdgeInsets.only(top: dimensions.dim30()),
@@ -840,7 +816,6 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                                 ),
                               ),
                             ),
-
                             Opacity(
                               opacity: finishQuizSequenceAnimation['2'].value,
                               child: Container(
@@ -862,7 +837,9 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                         Stack(
                           children: [
                             Opacity(
-                              opacity: state is QuizPageLoadedState && state.quote == null ? finishQuizSequenceAnimation['4'].value : 0,
+                              opacity: state is QuizPageLoadedState && state.quote == null
+                                  ? finishQuizSequenceAnimation['4'].value
+                                  : 0,
                               child: Container(
                                   width: MediaQuery.of(context).size.width,
                                   height: dimensions.dim80(),
@@ -871,11 +848,9 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                                       height: dimensions.dim20(),
                                       width: dimensions.dim20(),
                                       alignment: Alignment.bottomCenter,
-                                      child: Opacity(
-                                          opacity: .4,
-                                          child: CustomLoadingIndicator()))),
+                                      child:
+                                          Opacity(opacity: .4, child: CustomLoadingIndicator()))),
                             ),
-
                             AnimatedOpacity(
                               duration: Duration(milliseconds: 500),
                               opacity: state is QuizPageLoadedState && state.quote != null ? 1 : 0,
@@ -886,29 +861,38 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                                   // Quote
                                   Container(
                                     color: Colors.purple.withOpacity(.025),
-                                    padding: EdgeInsets.symmetric(vertical: dimensions.dim6(), horizontal: dimensions.dim12()),
+                                    padding: EdgeInsets.symmetric(
+                                        vertical: dimensions.dim6(),
+                                        horizontal: dimensions.dim12()),
                                     alignment: Alignment.center,
                                     child: Text(
-                                      state is QuizPageLoadedState ? state.quote != null ? state.quote['quote'] : '' : '',
+                                      state is QuizPageLoadedState
+                                          ? state.quote != null
+                                              ? state.quote['quote']
+                                              : ''
+                                          : '',
                                       style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: dimensions.sp16()
-                                      ),
+                                          color: Colors.white, fontSize: dimensions.sp16()),
                                       textAlign: TextAlign.center,
                                     ),
                                   ),
                                   // Author
                                   Container(
                                     // color: Colors.orange.withOpacity(.1),
-                                    padding: EdgeInsets.symmetric(vertical: dimensions.dim6(), horizontal: dimensions.dim16()),
+                                    padding: EdgeInsets.symmetric(
+                                        vertical: dimensions.dim6(),
+                                        horizontal: dimensions.dim16()),
                                     alignment: Alignment.centerRight,
                                     child: Text(
-                                      state is QuizPageLoadedState ? state.quote != null ? state.quote['authors'] : '' : '',
+                                      state is QuizPageLoadedState
+                                          ? state.quote != null
+                                              ? state.quote['authors']
+                                              : ''
+                                          : '',
                                       style: TextStyle(
                                           color: Colors.red.withOpacity(.5),
                                           fontSize: dimensions.sp16(),
-                                          fontWeight: FontWeight.bold
-                                      ),
+                                          fontWeight: FontWeight.bold),
                                       textAlign: TextAlign.center,
                                     ),
                                   ),
@@ -969,7 +953,6 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                         ),
                       ),
                     ),
-
                     Opacity(
                       opacity: finishQuizSequenceAnimation['4'].value,
                       child: Container(
@@ -1005,20 +988,24 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
             )
           ],
         );
-
       },
     );
   }
 
-  String _buildMinutes() {
-    return '${(widget.userBook.totalTimeTaken / 60000 < 0 ? 0 : widget.userBook
-        .totalTimeTaken / 60000).toInt()}';
+  String _buildMinutes(int totalTimeTaken) {
+    return '${(totalTimeTaken / 60000 < 0 ? 0 : totalTimeTaken / 60000).toInt()}';
   }
-  String _buildSeconds() {
-    return '${widget.userBook.totalTimeTaken /
-        1000 < 0 ? 0 : (widget.userBook.totalTimeTaken / 1000 - ((widget.userBook
-        .totalTimeTaken / 60000 < 0 ? 0 : widget.userBook.totalTimeTaken / 60000)
-        .toInt() * 60)).toInt()}';
+
+  String _buildSeconds(int totalTimeTaken) {
+    int _sec = totalTimeTaken / 1000 < 0
+        ? 0
+        : (totalTimeTaken / 1000 -
+                ((totalTimeTaken / 60000 < 0 ? 0 : totalTimeTaken / 60000).toInt() * 60))
+            .toInt();
+    if (_sec < 10)
+      return '0$_sec';
+    else
+      return '$_sec';
   }
 
   @override
@@ -1028,8 +1015,228 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
     finishQuizAnimController
       ..reset()
       ..dispose();
+    // compQuestionAnimController
+    //   ..reset()
+    //   ..dispose();
     timer?.cancel();
     pageViewController?.dispose();
     super.dispose();
+  }
+
+  // State is QuizLoaded or QuizEmpty
+  Widget _buildResultQuestion(BuildContext context, int pos, dynamic state) {
+    Question _q = state.mainBook.completedQuiz[pos];
+
+    var _compQuestionAnimController = AnimationController(vsync: this);
+    var _compQuestionSequenceAnimation = SequenceAnimationBuilder()
+        .addAnimatable(
+        animatable: Tween<double>(begin: dimensions.dim80(), end: dimensions.dim180()),
+        from: Duration.zero,
+        to: Duration(milliseconds: 300),
+        tag: '1')
+        .addAnimatable(
+        animatable: Tween<double>(begin: dimensions.dim40(), end: dimensions.dim60()),
+        from: Duration(milliseconds: 200),
+        to: Duration(milliseconds: 400),
+        tag: '2')
+        .addAnimatable(
+        animatable: Tween<double>(begin: 0.0, end: dimensions.dim100()),
+        from: Duration(milliseconds: 300),
+        to: Duration(milliseconds: 600),
+        tag: '3')
+        .animate(_compQuestionAnimController);
+
+
+    return AnimatedBuilder(
+      animation: _compQuestionAnimController,
+      builder: (context, _pos) {
+        return Container(
+          alignment: Alignment.topCenter,
+          margin: EdgeInsets.only(bottom: dimensions.dim12()),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              // Question number
+              Container(
+                margin: EdgeInsets.only(left: dimensions.dim12()),
+                child: Text(
+                  (pos + 1).toString(),
+                  style: TextStyle(
+                      color: Colors.white, fontSize: dimensions.sp20(), fontWeight: FontWeight.bold),
+                ),
+              ),
+
+              // Question
+              Expanded(
+                child: GestureDetector(
+                  onTap: () async {
+
+                    if (_q.expanded) {
+                      _q.expanded = false;
+                      await _compQuestionAnimController.reverse();
+                    } else {
+                      _q.expanded = true;
+                      await _compQuestionAnimController.forward();
+                    }
+                  },
+
+                  child: Container(
+                    width: MediaQuery.of(context).size.width - dimensions.dim80(),
+                    height: _compQuestionSequenceAnimation['1'].value,
+                    margin: EdgeInsets.only(right: dimensions.dim16(), left: dimensions.dim12()),
+                    decoration: ShapeDecoration(
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(16)),
+                            side: BorderSide(color: Colors.white))),
+                    child: Column(
+                      children: [
+                        // Main question
+                        Container(
+                          decoration: ShapeDecoration(
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.all(Radius.circular(14)),
+                                  side: BorderSide(color: Colors.white54))),
+                          padding: EdgeInsets.symmetric(vertical: dimensions.dim6()),
+                          child: Row(
+                            children: [
+                              Container(
+                                  margin:
+                                  EdgeInsets.only(left: dimensions.dim12(), top: dimensions.dim4()),
+                                  child: Text('Q: ',
+                                      style: TextStyle(
+                                          color: Colors.purple[300], fontSize: dimensions.sp15()))),
+                              Container(
+                                width: MediaQuery.of(context).size.width - dimensions.dim90(),
+                                margin: EdgeInsets.only(top: dimensions.dim2()),
+                                padding: EdgeInsets.symmetric(horizontal: dimensions.dim4()),
+                                height: _compQuestionSequenceAnimation['2'].value,
+                                alignment: Alignment.center,
+                                child: Text(
+                                  'Ronakdlk awjdlkwajkl djawlkda awdl lkawjdlkw kal djklwdk alwkdjlwkaj lkaw lkdjwalkjdlkwajlkdj lkjawlkdjklwjd kljkawkljdl',
+                                  // _q.question,
+                                  style: TextStyle(color: Colors.white, fontSize: dimensions.sp15()),
+                                  maxLines: _compQuestionSequenceAnimation['2'].value != dimensions.dim40() ? 4 : 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        Stack(
+                          children: [
+                            // LONG Answers, time taken, other shit
+                            Container(
+                              height: _compQuestionSequenceAnimation['3'].value,
+                              child: Opacity(
+                                opacity: _compQuestionSequenceAnimation['3'].value == 0 ? 0 : _compQuestionSequenceAnimation['3'].value / dimensions.dim100(),
+                                child: Column(
+                                  children: List.generate(_q.answers.length, (i) {
+                                    return Row(
+                                      children: [
+                                        Container(
+                                            margin: EdgeInsets.only(left: dimensions.dim12(), right: dimensions.dim8(), top: dimensions.dim6() * (_compQuestionSequenceAnimation['3'].value / dimensions.dim100())),
+                                            child: Text(
+                                              '${i+1}.',
+                                              style: TextStyle(
+                                                  color: Colors.purple[300],
+                                                  fontSize: dimensions.sp14() * (_compQuestionSequenceAnimation['3'].value / dimensions.dim100()),
+                                                  fontWeight: FontWeight.bold
+                                              ),
+                                            )
+                                        ),
+                                        Container(
+                                          margin: EdgeInsets.only(top: dimensions.dim6() * (_compQuestionSequenceAnimation['3'].value / dimensions.dim100())),
+                                          child: Text(
+                                            _q.answers[i],
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: dimensions.sp14() * (_compQuestionSequenceAnimation['3'].value / dimensions.dim100())
+                                            ),
+                                          ),
+                                        )
+                                      ],
+                                    );
+                                  }),
+                                ),
+                              ),
+                            ),
+
+                            // SHORT Answer and time taken
+                            AnimatedOpacity(
+                              duration: Duration(milliseconds: 200),
+                              opacity: _compQuestionSequenceAnimation['1'].value != dimensions.dim80() ? 0 : 1,
+                              child: Row(
+                                children: [
+                                  // Answer
+                                  Expanded(
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          margin: EdgeInsets.only(
+                                              top: dimensions.dim2(),
+                                              left: dimensions.dim12(),
+                                              right: dimensions.dim2()),
+                                          child: Text(
+                                            'A: ',
+                                            style: TextStyle(
+                                                color: Colors.purple[300], fontSize: dimensions.sp15()),
+                                          ),
+                                        ),
+                                        Container(
+                                          width: dimensions.dim80(),
+                                          margin: EdgeInsets.only(
+                                              top: dimensions.dim2(),
+                                              left: dimensions.dim12(),
+                                              right: dimensions.dim2()),
+                                          child: Text(
+                                            _q.answered,
+                                            style: TextStyle(
+                                                color: Colors.white, fontSize: dimensions.sp14()),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  // Time taken
+                                  Container(
+                                    margin: EdgeInsets.only(
+                                        top: dimensions.dim2(),
+                                        left: dimensions.dim12(),
+                                        right: dimensions.dim6()),
+                                    child: Icon(
+                                      Icons.av_timer_sharp,
+                                      color: Colors.black54,
+                                      size: dimensions.dim18(),
+                                    ),
+                                  ),
+                                  Container(
+                                    margin: EdgeInsets.only(
+                                        top: dimensions.dim4(),
+                                        left: dimensions.dim4(),
+                                        right: dimensions.dim24()),
+                                    child: Text(
+                                        '${_buildMinutes(_q.timeTaken)}:${_buildSeconds(_q.timeTaken)}',
+                                        style: TextStyle(
+                                            color: Colors.white, fontSize: dimensions.sp12())),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }

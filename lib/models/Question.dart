@@ -12,10 +12,11 @@ class Question {
   int timeTaken; // In milliseconds
   int timesCompleted;
   Timestamp completedAt;
+  bool expanded; // If expanded when completed
 
   Question(this.question, this.questionSearch, this.correctAnswer, this.author, this.answers,
       this.createdAt,
-      {this.answered, this.timeTaken, this.completedAt, this.timesCompleted});
+      {this.answered, this.timeTaken, this.completedAt, this.timesCompleted, this.expanded = false});
 
   Question.fromSnap(DocumentSnapshot snap) {
     this.snap = snap;
@@ -31,6 +32,7 @@ class Question {
     this.timeTaken = snap.data['timeTaken'];
     this.completedAt = snap.data['completedAt'];
     this.timesCompleted = snap.data['timesCompleted'] ?? 0;
+    this.expanded = false;
   }
 }
 

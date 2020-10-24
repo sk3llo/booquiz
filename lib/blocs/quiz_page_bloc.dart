@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:booquiz/blocs/blocs.dart';
 import 'package:booquiz/main.dart';
 import 'package:booquiz/models/MainBook.dart';
 import 'package:booquiz/models/UserBook.dart';
@@ -40,6 +41,17 @@ class QuizPageNullStateEvent extends QuizPageEvents {
   List<Object> get props => [];
 }
 
+// Erase all book records from user and book
+class QuizPageClearBookRecordEvent extends QuizPageEvents {
+  final MainBook mainBook;
+  final UserBook userBook;
+
+  QuizPageClearBookRecordEvent(this.mainBook, this.userBook);
+
+  @override
+  List<Object> get props => [mainBook, userBook];
+}
+
 class QuizPageUpdateTotalTimeTakenEvent extends QuizPageEvents {
   final UserBook userBook;
   final int totalTimeTaken;
@@ -56,8 +68,7 @@ class QuizPageLoadResultEvent extends QuizPageEvents {
   final int limit;
   final DocumentSnapshot startAfter;
 
-  QuizPageLoadResultEvent(
-      this.mainBook, this.userBook, {this.limit = 10, this.startAfter});
+  QuizPageLoadResultEvent(this.mainBook, this.userBook, {this.limit = 10, this.startAfter});
 
   @override
   List<Object> get props => [mainBook, userBook, limit, startAfter];
@@ -106,8 +117,9 @@ class QuizPageLoadedState extends QuizPageStates {
   final MainBook mainBook;
   final UserBook userBook;
   final Map<String, String> quote;
+  final bool noMore;
 
-  QuizPageLoadedState(this.mainBook, this.userBook, {this.quote});
+  QuizPageLoadedState(this.mainBook, this.userBook, {this.quote, this.noMore = false});
 
   @override
   List<Object> get props => [mainBook, userBook, quote];
@@ -184,7 +196,9 @@ class QuizPageBloc extends Bloc<QuizPageEvents, QuizPageStates> {
 
             yield QuizPageLoadedState(event.mainBook, event.userBook);
           } else {
-            quizPageBloc.add(QuizPageLoadResultEvent(event.mainBook, event.userBook));
+            // Load result questions until limit
+            if (event.mainBook.completedQuiz.isEmpty)
+              quizPageBloc.add(QuizPageLoadResultEvent(event.mainBook, event.userBook));
             // Most likely user has finished the quiz
             yield QuizPageLoadedState(event.mainBook, event.userBook);
             await event.finishQuizAnimController.forward();
@@ -206,36 +220,66 @@ class QuizPageBloc extends Bloc<QuizPageEvents, QuizPageStates> {
     }
 
     // Load results when quiz is done
-    if (event is QuizPageLoadResultEvent){
+    if (event is QuizPageLoadResultEvent) {
       try {
         QuerySnapshot _completedQuiz;
 
-        // If has startAfter doc
+        // If has startAfter doc, startAfter: event.mainBook.completedQuiz.isNotEmpty ? event.mainBook.completedQuiz.last.snap : null
         if (event.startAfter != null) {
-          _completedQuiz = await event.userBook.snap.reference.collection('COMPLETED_QUIZ')
+          _completedQuiz = await event.userBook.snap.reference
+              .collection('COMPLETED_QUIZ')
               .orderBy('completedAt')
               .startAfterDocument(event.startAfter)
               .limit(event.limit)
               .getDocuments();
         } else {
-          _completedQuiz = await event.userBook.snap.reference.collection('COMPLETED_QUIZ')
+          _completedQuiz = await event.userBook.snap.reference
+              .collection('COMPLETED_QUIZ')
               .orderBy('completedAt')
               .limit(event.limit)
               .getDocuments();
         }
 
-        if (_completedQuiz != null &&  _completedQuiz.documents.isNotEmpty) {
+        if (_completedQuiz != null) {
+          if (_completedQuiz.documents.isNotEmpty) {
+            _completedQuiz.documents.forEach((d) {
+              var _q = Question.fromSnap(d);
 
-          _completedQuiz.documents.forEach((d) {
-            event.mainBook.completedQuiz.add(Question.fromSnap(d));
-          });
+              if (event.mainBook.completedQuiz.isNotEmpty) {
+                // Check if already contains question and if so just skip it
+                event.mainBook.completedQuiz.firstWhere(
+                    (_compQ) =>
+                        _q.question == _compQ.question &&
+                        _q.completedAt.millisecondsSinceEpoch ==
+                            _compQ.completedAt.millisecondsSinceEpoch, orElse: () {
+                  // If not in the list yet then just add it
+                  event.mainBook.completedQuiz.add(_q);
+                  return;
+                });
+              } else {
+                event.mainBook.completedQuiz.add(_q);
+                return;
+              }
+            });
 
-          yield QuizPageLoadedState(event.mainBook, event.userBook, quote: _quote);
+            event.mainBook.completedQuiz.sort((a, b) => a.completedAt.compareTo(b.completedAt));
 
+            yield QuizPageEmptyState(mainBook: event.mainBook, userBook: event.userBook);
+
+            bookDebug('quiz_page_bloc.dart', 'event is QuizPageLoadResultEvent', 'INFO',
+                'Loaded ${event.mainBook.completedQuiz.length} completed questions.');
+
+            yield QuizPageLoadedState(event.mainBook, event.userBook, quote: _quote);
+          } else {
+            yield QuizPageEmptyState(mainBook: event.mainBook, userBook: event.userBook);
+            bookDebug('quiz_page_bloc.dart', 'event is QuizPageLoadResultEvent', 'INFO',
+                'Loaded ${event.mainBook.completedQuiz.length} completed questions.\nNo more left');
+            yield QuizPageLoadedState(event.mainBook, event.userBook, quote: _quote, noMore: true);
+          }
+        } else {
+          bookDebug('quiz_page_bloc.dart', 'event is QuizPageLoadResultEvent', 'ERROR',
+              '_completedQuiz == null daaamn');
         }
-
-
-
       } catch (e) {
         bookDebug('quiz_page_bloc.dart', 'event is QuizPageLoadResultEvent', 'ERROR', e.toString());
       }
@@ -254,8 +298,8 @@ class QuizPageBloc extends Bloc<QuizPageEvents, QuizPageStates> {
         if (event.userBook.questionsCompleted == event.mainBook.questionsLength) {
           event.mainBook.timesCompleted ??= 0;
           event.userBook.timesCompleted ??= 0;
-          event.userBook.timesCompleted += 1;
           event.mainBook.timesCompleted += 1;
+          event.userBook.timesCompleted += 1;
           event.userBook.completed = true;
           event.userBook.totalTimeTaken = event.timeTaken;
         }
@@ -295,7 +339,8 @@ class QuizPageBloc extends Bloc<QuizPageEvents, QuizPageStates> {
               .document(currentUser.snap.documentID)
               .setData({
             'timeTaken': event.timeTaken,
-            'timesCompleted': event.userBook.timesCompleted + 1,
+            'timesCompleted': event.userBook.timesCompleted,
+            'userRef': currentUser.snap.reference,
             'when': event.question.completedAt
           }, merge: true);
         }
@@ -347,29 +392,106 @@ class QuizPageBloc extends Bloc<QuizPageEvents, QuizPageStates> {
         yield QuizPageLoadedState(event.mainBook, event.userBook, quote: _quote);
         await event.finishQuizAnimController.forward();
 
-        if (event.userBook.questionsCompleted - event.mainBook.questionsLength <= 3 && _quote == null) {
+        if (event.userBook.questionsCompleted - event.mainBook.questionsLength <= 3 &&
+            _quote == null) {
           _quote = await getQuote();
         }
-
       } catch (e) {
         bookDebug(
             'quiz_page_bloc.dart', 'event is QuizPageCompleteQuestionEvent', 'ERROR', e.toString());
       }
+    }
+
+    // Erase all the book records
+    if (event is QuizPageClearBookRecordEvent) {
+
+      try {
+        event.userBook.totalTimeTaken = 0;
+        event.userBook.questionsInProgress = 0;
+        event.userBook.questionsCompleted = 0;
+        event.userBook.lastCompletedQuestion = null;
+        // If completed all questions also update fields below
+        event.mainBook.timesCompleted = 0;
+        event.mainBook.quiz = [];
+        event.mainBook.completedQuiz = [];
+        event.mainBook.completedQuiz = [];
+        event.userBook.timesCompleted = 0;
+        event.userBook.completed = false;
+        event.userBook.totalTimeTaken = null;
+
+        _quote = {};
+
+        // Reset main book doc
+        await event.mainBook.snap.reference
+            .updateData({'timesCompleted': event.mainBook.timesCompleted});
+
+        // Erase COMPLETED_BY in MAIN BOOK
+        await event.mainBook.snap.reference
+            .collection('COMPLETED_BY')
+            .where('useRef', isEqualTo: currentUser.snap.reference)
+            .getDocuments()
+            .then((d) async {
+          if (d != null && d.documents.isNotEmpty){
+            await d.documents.first.reference.delete();
+          }
+        });
+
+        // For each question in MAIN BOOK update data
+        await event.mainBook.snap.reference
+            .collection('QUESTIONS')
+            .getDocuments()
+            .then((_quiz) async {
+          await Future.forEach<DocumentSnapshot>(_quiz.documents, (_q) async {
+            await _q.reference.updateData({'timesCompleted': _q.data['timesCompleted'] - 1});
+          });
+        });
+
+        // Erase COMPLETED_BY in each MAIN BOOK QUESTIONS
+        await event.mainBook.snap.reference
+            .collection('QUESTIONS')
+            .getDocuments()
+            .then((d) async {
+          //.where('useRef', isEqualTo: currentUser.snap.reference.path)
+          await Future.forEach<DocumentSnapshot>(d.documents, (_q) async {
+            await _q.reference.collection('COMPLETED_BY')
+                .where('useRef', isEqualTo: currentUser.snap.reference)
+                .getDocuments()
+                .then((d) async {
+                  if (d != null && d.documents.isNotEmpty){
+                    await d.documents.first.reference.delete();
+                  }
+            });
+          });
+        });
+
+
+        // DELETE CURRENT USER BOOK NOW
+        await event.userBook.snap.reference.delete();
+
+        yield QuizPageEmptyState(mainBook: event.mainBook, userBook: event.userBook);
+
+        bookPageBloc.add(BookPageUpdateEvent(event.mainBook, event.userBook));
+        yield QuizPageLoadedState(event.mainBook, event.userBook);
+
+      } catch (e) {
+        bookDebug(
+            'quiz_page_bloc.dart', 'event is QuizPageClearBookRecordEvent', 'ERROR', e.toString());
+      }
+
     }
   }
 }
 
 Future<Map<String, String>> getQuote() async {
   try {
-    int _page = Random.secure().nextInt(101) == 0 ? 1 : Random.secure().nextInt(
-        101); // max 100 pages
+    int _page =
+        Random.secure().nextInt(101) == 0 ? 1 : Random.secure().nextInt(101); // max 100 pages
     String _category = Random.secure().nextBool() ? 'books' : 'reading'; // random category
 
     // https://www.goodreads.com/quotes/tag/reading?page=100
 
-    http.Response _response = await http.get(
-        'https://www.goodreads.com/quotes/tag/books?page=$_page');
-
+    http.Response _response =
+        await http.get('https://www.goodreads.com/quotes/tag/books?page=$_page');
 
     if (_response.statusCode == 200) {
       var _page = parser.parse(_response.body);
@@ -379,13 +501,17 @@ Future<Map<String, String>> getQuote() async {
       var _randomNum = Random.secure().nextInt(_quotes.length);
       String _randomQuote = _quotes[_randomNum].text.trim();
 
-      var quoteAndAuthor = _randomQuote.replaceAll(RegExp(r'\n.'), '').replaceAll(RegExp(r'\n.*'), ''); // convert string to list[quote, author]
+      var quoteAndAuthor = _randomQuote
+          .replaceAll(RegExp(r'\n.'), '')
+          .replaceAll(RegExp(r'\n.*'), ''); // convert string to list[quote, author]
       List<String> _quote = quoteAndAuthor.split('   ―    ');
       _quote.removeRange(1, _quote.length);
 
-      String _author = quoteAndAuthor.replaceAll(RegExp(r'.*”   ―    '), '').replaceAll(RegExp(r',.*'), '');
-      
-      List<String> _fromWhere = quoteAndAuthor.split(',         ')..removeAt(0); // from where the quote was taken (book/novel/story)
+      String _author =
+          quoteAndAuthor.replaceAll(RegExp(r'.*”   ―    '), '').replaceAll(RegExp(r',.*'), '');
+
+      List<String> _fromWhere = quoteAndAuthor.split(',         ')
+        ..removeAt(0); // from where the quote was taken (book/novel/story)
 
       Map<String, String> data = {
         'quote': _quote.first.trim(),
@@ -394,7 +520,6 @@ Future<Map<String, String>> getQuote() async {
       };
 
       return data;
-
     } else {
       return {'The unexamined life is not worth living.': 'Socrates'};
     }

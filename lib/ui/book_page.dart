@@ -74,15 +74,23 @@ class _BookPageState extends State<BookPage> with TickerProviderStateMixin {
                       ),
                     ),
                   ),
-                  title: Text(state is BookPageEmptyState
-                      ? 'No questions yet'
-                      : state is BookPageLoadingState
-                          ? ''
-                          : state is BookPageLoadedState
-                              ? state.mainBook?.questionsLength == 1
-                                  ? state.userBook.completed || state.userBook != null && state.userBook.questionsCompleted == state.mainBook.questionsLength ? 'Completed!' : 'Questions ' + state.userBook?.questionsCompleted.toString() + ' / ' +  state.mainBook?.questionsLength.toString()
-                                  : 'Questions ' + state.userBook?.questionsCompleted.toString() + ' / ' +  state.mainBook?.questionsLength.toString()
-                              : ''),
+                  title: GestureDetector(
+                    onDoubleTap: () {
+                      // TODO: just for testing on double tap erase the book
+                      if (state is BookPageLoadedState){
+                        quizPageBloc.add(QuizPageClearBookRecordEvent(state.mainBook, state.userBook));
+                      }
+                    },
+                    child: Text(state is BookPageEmptyState
+                        ? 'No questions yet'
+                        : state is BookPageLoadingState
+                            ? ''
+                            : state is BookPageLoadedState
+                                ? state.mainBook?.questionsLength == 1
+                                    ? state.userBook.completed || state.userBook != null && state.userBook.questionsCompleted == state.mainBook.questionsLength ? 'Completed!' : 'Questions ' + state.userBook?.questionsCompleted.toString() + ' / ' +  state.mainBook?.questionsLength.toString()
+                                    : 'Questions ' + state.userBook?.questionsCompleted.toString() + ' / ' +  state.mainBook?.questionsLength.toString()
+                                : ''),
+                  ),
                   centerTitle: true,
                   actions: <Widget>[
                     Tooltip(
